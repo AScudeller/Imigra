@@ -26,4 +26,5 @@ urlpatterns = [
     path('login/', cliente_login, name='cliente_login'),
     path('fatura/pdf/<int:doc_entry>/', gerar_invoice_pdf, name='gerar_invoice_pdf'),
     path('processo/contrato/<int:processo_id>/', gerar_contrato_pdf, name='gerar_contrato_pdf'),
+    path('i18n/', include('django.conf.urls.i18n')),
 ]

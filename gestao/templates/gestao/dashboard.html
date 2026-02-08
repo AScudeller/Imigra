@@ -72,6 +72,40 @@
     </div>
 </div>
 
+<!-- SEÇÃO DE ALERTAS PROATIVOS -->
+{% if parcelas_alerta or docs_alerta %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-header bg-warning text-dark fw-bold">
+                <i class="fas fa-bell me-2"></i> Próximos Vencimentos (Alerta 5 dias)
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for p in parcelas_alerta %}
+                    <div class="col-md-4 mb-2">
+                        <div class="alert alert-light border-warning mb-0 p-2 small">
+                            <strong>Parcela:</strong> {{ p.fatura.cliente.nome }}<br>
+                            Vence: {{ p.data_vencimento|date:"d/m/Y" }} - <span class="text-danger fw-bold">${{
+                                p.valor_parcela|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% for doc in docs_alerta %}
+                    <div class="col-md-4 mb-2">
+                        <div class="alert alert-light border-info mb-0 p-2 small">
+                            <strong>Doc:</strong> {{ doc.processo.cliente.nome }}<br>
+                            {{ doc.nome }} - Expira em: {{ doc.validade|date:"d/m/Y" }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <!-- Status dos Processos -->
     <div class="col-lg-7">
@@ -202,6 +236,10 @@
 
     .border-left-danger {
         border-left: 0.25rem solid #e74a3b !important;
+    }
+
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
     }
 
     .text-xs {
