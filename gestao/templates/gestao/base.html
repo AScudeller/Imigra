@@ -91,36 +91,53 @@
                     <i class="fa-solid fa-gauge me-2"></i> Dashboard
                 </a>
             </li>
+            {% if perms.gestao.view_cliente %}
             <li class="nav-item">
                 <a href="/admin/gestao/cliente/" class="nav-link">
                     <i class="fa-solid fa-users me-2"></i> Clientes
                 </a>
             </li>
+            {% endif %}
+
+            {% if perms.gestao.view_lead %}
             <li class="nav-item">
                 <a href="/admin/gestao/lead/" class="nav-link">
                     <i class="fa-solid fa-users-viewfinder me-2"></i> Leads (CRM)
                 </a>
             </li>
+            {% endif %}
+
+            {% if perms.gestao.view_despesa %}
             <li class="nav-item">
                 <a href="/admin/gestao/despesa/" class="nav-link">
                     <i class="fa-solid fa-money-bill-transfer me-2"></i> Contas a Pagar
                 </a>
             </li>
+            {% endif %}
+
+            {% if perms.gestao.view_tipovisto %}
             <li class="nav-item">
                 <a href="/admin/gestao/tipovisto/" class="nav-link">
                     <i class="fa-solid fa-passport me-2"></i> Tipos de Vistos
                 </a>
             </li>
+            {% endif %}
+
+            {% if perms.gestao.view_processo %}
             <li class="nav-item">
                 <a href="/admin/gestao/processo/" class="nav-link">
                     <i class="fa-solid fa-briefcase me-2"></i> Processos
                 </a>
             </li>
+            {% endif %}
+
+            {% if perms.gestao.view_fatura %}
             <li class="nav-item">
                 <a href="/admin/gestao/fatura/" class="nav-link">
                     <i class="fa-solid fa-file-invoice-dollar me-2"></i> Faturas (Financeiro)
                 </a>
             </li>
+            {% endif %}
         </ul>
         <div class="p-4 mt-auto">
             <hr>
