@@ -25,6 +25,7 @@ def setup_permissions():
         'view_despesa', 'add_despesa', 'change_despesa',
         'view_cliente', # Precisa ver cliente para faturar
         'view_lognotificacao',
+        'view_orcamento', 'change_orcamento', # Financeiro converte em fatura
     ]
     for p_code in perms_financeiro:
         p = Permission.objects.filter(codename=p_code).first()
@@ -54,6 +55,7 @@ def setup_permissions():
         'view_lead', 'add_lead', 'change_lead',
         'view_cliente', 'add_cliente',
         'view_tipovisto',
+        'view_orcamento', 'add_orcamento', 'change_orcamento',
     ]
     for p_code in perms_comercial:
         p = Permission.objects.filter(codename=p_code).first()

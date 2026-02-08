@@ -201,6 +201,49 @@ class Documento(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.processo.cliente.nome})"
 
+# --- PROPOSTAS E ORÇAMENTOS (Presales / Quotation) ---
+
+class Orcamento(models.Model):
+    STATUS_CHOICES = [
+        ('RASCUNHO', 'Rascunho'),
+        ('ENVIADO', 'Enviado ao Cliente'),
+        ('ACEITO', 'Aceito (Gerar Fatura)'),
+        ('REJEITADO', 'Rejeitado'),
+    ]
+    FREQ_CHOICES = [
+        ('SEMANAL', 'Semanal'),
+        ('QUINZENAL', 'Quinzenal'),
+        ('MENSAL', 'Mensal'),
+    ]
+
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='orcamentos')
+    tipo_visto = models.ForeignKey(TipoVisto, on_delete=models.PROTECT)
+    valor_total = models.DecimalField(_("Valor Total (USD)"), max_digits=12, decimal_places=2)
+    entrada = models.DecimalField(_("Valor de Entrada (USD)"), max_digits=12, decimal_places=2, default=0.00)
+    num_parcelas = models.PositiveIntegerField(_("Número de Parcelas"), default=1)
+    frequencia = models.CharField(_("Frequência"), max_length=20, choices=FREQ_CHOICES, default='MENSAL')
+    data_proposta = models.DateField(_("Data da Proposta"), auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='RASCUNHO')
+    observacoes = models.TextField(blank=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"Orçamento #{self.id} - {self.cliente.nome} ({self.tipo_visto.codigo})"
+
+    class Meta:
+        verbose_name = _("Orçamento")
+        verbose_name_plural = _("Orçamentos")
+
+class OrcamentoParcela(models.Model):
+    """Visualização prévia das parcelas antes de virar fatura real"""
+    orcamento = models.ForeignKey(Orcamento, on_delete=models.CASCADE, related_name='parcelas_preview')
+    num_parcela = models.PositiveIntegerField()
+    valor = models.DecimalField(max_digits=12, decimal_places=2)
+    data_vencimento = models.DateField()
+
+    def __str__(self):
+        return f"P{self.num_parcela} - {self.valor}"
+
 # --- MOTOR FINANCEIRO (Financial Engine - SAP B1 Style) ---
 
 class Fatura(models.Model):

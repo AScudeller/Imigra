@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cliente, Processo, Documento, Fatura, Parcela, Pagamento, AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, EtapaProcesso, Lead, Despesa, LogNotificacao
+from .models import Cliente, Processo, Documento, Fatura, Parcela, Pagamento, AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, EtapaProcesso, Lead, Despesa, LogNotificacao, Orcamento, OrcamentoParcela
 from simple_history.admin import SimpleHistoryAdmin
 
 @admin.register(Cliente)
@@ -96,6 +96,79 @@ class LogNotificacaoAdmin(SimpleHistoryAdmin):
     list_filter = ('tipo', 'status', 'data_envio')
     search_fields = ('cliente__nome', 'mensagem')
     readonly_fields = ('data_envio',)
+
+class OrcamentoParcelaInline(admin.TabularInline):
+    model = OrcamentoParcela
+    extra = 0
+    readonly_fields = ('num_parcela', 'valor', 'data_vencimento')
+
+@admin.register(Orcamento)
+class OrcamentoAdmin(SimpleHistoryAdmin):
+    list_display = ('id', 'cliente', 'tipo_visto', 'valor_total', 'status', 'data_proposta')
+    list_filter = ('status', 'frequencia')
+    search_fields = ('cliente__nome',)
+    inlines = [OrcamentoParcelaInline]
+    actions = ['gerar_plano_pagamento', 'converter_para_fatura']
+
+    def gerar_plano_pagamento(self, request, queryset):
+        from datetime import timedelta
+        for orc in queryset:
+            # Limpa prévias antigas
+            orc.parcelas_preview.all().delete()
+            
+            saldo = orc.valor_total - orc.entrada
+            data_atual = timezone.now().date()
+            
+            # 1. Entrada (se houver)
+            if orc.entrada > 0:
+                OrcamentoParcela.objects.create(
+                    orcamento=orc, num_parcela=0, valor=orc.entrada, data_vencimento=data_atual
+                )
+            
+            # 2. Parcelas
+            if orc.num_parcelas > 0:
+                valor_parcela = (saldo / orc.num_parcelas).quantize(Decimal('0.01'))
+                
+                for i in range(1, orc.num_parcelas + 1):
+                    if orc.frequencia == 'SEMANAL':
+                        data_venc = data_atual + timedelta(weeks=i)
+                    elif orc.frequencia == 'QUINZENAL':
+                        data_venc = data_atual + timedelta(days=15 * i)
+                    else: # MENSAL
+                        # Aproximação simples de mês (30 dias) ou usar relativedelta para precisão SAP
+                        data_venc = data_atual + timedelta(days=30 * i)
+                        
+                    OrcamentoParcela.objects.create(
+                        orcamento=orc, num_parcela=i, valor=valor_parcela, data_vencimento=data_venc
+                    )
+        self.message_user(request, "Plano de pagamento gerado com sucesso!")
+
+    def converter_para_fatura(self, request, queryset):
+        for orc in queryset:
+            if orc.parcelas_preview.count() == 0:
+                self.message_user(request, f"Erro: Orçamento {orc.id} não possui plano de pagamento gerado.", level='ERROR')
+                continue
+            
+            # Criar Fatura (Invoice)
+            fatura = Fatura.objects.create(
+                cliente=orc.cliente,
+                total_fatura=orc.valor_total,
+                status='ABERTO'
+            )
+            
+            # Criar Parcelas Reais
+            for preview in orc.parcelas_preview.all():
+                Parcela.objects.create(
+                    fatura=fatura,
+                    num_parcela=preview.num_parcela if preview.num_parcela > 0 else 1,
+                    valor_parcela=preview.valor,
+                    data_vencimento=preview.data_vencimento
+                )
+            
+            orc.status = 'ACEITO'
+            orc.save()
+            
+        self.message_user(request, "Orçamentos convertidos em Invoices com sucesso!")
 
 # Personalização do Painel de Administração
 admin.site.site_header = "G IMIGRA"

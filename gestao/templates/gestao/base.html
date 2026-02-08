@@ -139,6 +139,14 @@
             </li>
             {% endif %}
 
+            {% if perms.gestao.view_orcamento %}
+            <li class="nav-item">
+                <a href="/admin/gestao/orcamento/" class="nav-link">
+                    <i class="fa-solid fa-file-signature me-2"></i> Orçamentos (Propostas)
+                </a>
+            </li>
+            {% endif %}
+
             {% if perms.gestao.view_fatura %}
             <li class="nav-item">
                 <a href="/admin/gestao/fatura/" class="nav-link">
