@@ -131,6 +131,14 @@
             </li>
             {% endif %}
 
+            {% if perms.gestao.view_lognotificacao %}
+            <li class="nav-item">
+                <a href="/admin/gestao/lognotificacao/" class="nav-link">
+                    <i class="fa-solid fa-comments me-2"></i> Comunicação (Logs)
+                </a>
+            </li>
+            {% endif %}
+
             {% if perms.gestao.view_fatura %}
             <li class="nav-item">
                 <a href="/admin/gestao/fatura/" class="nav-link">

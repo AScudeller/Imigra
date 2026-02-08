@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cliente, Processo, Documento, Fatura, Parcela, Pagamento, AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, EtapaProcesso, Lead, Despesa
+from .models import Cliente, Processo, Documento, Fatura, Parcela, Pagamento, AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, EtapaProcesso, Lead, Despesa, LogNotificacao
 from simple_history.admin import SimpleHistoryAdmin
 
 @admin.register(Cliente)
@@ -89,6 +89,13 @@ class DespesaAdmin(SimpleHistoryAdmin):
     list_display = ('descricao', 'categoria', 'valor', 'data_vencimento', 'pago')
     list_filter = ('pago', 'categoria', 'data_vencimento')
     search_fields = ('descricao',)
+
+@admin.register(LogNotificacao)
+class LogNotificacaoAdmin(SimpleHistoryAdmin):
+    list_display = ('id', 'cliente', 'tipo', 'status', 'data_envio')
+    list_filter = ('tipo', 'status', 'data_envio')
+    search_fields = ('cliente__nome', 'mensagem')
+    readonly_fields = ('data_envio',)
 
 # Personalização do Painel de Administração
 admin.site.site_header = "G IMIGRA"

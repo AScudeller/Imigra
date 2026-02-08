@@ -316,6 +316,7 @@ class LogNotificacao(models.Model):
     mensagem = models.TextField()
     status = models.CharField(max_length=10, choices=STATUS_CONTROLE, default='PENDENTE')
     data_envio = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.tipo} - {self.cliente.nome} - {self.status}"

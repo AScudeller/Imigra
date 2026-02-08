@@ -24,6 +24,7 @@ def setup_permissions():
         'view_pagamento', 'add_pagamento',
         'view_despesa', 'add_despesa', 'change_despesa',
         'view_cliente', # Precisa ver cliente para faturar
+        'view_lognotificacao',
     ]
     for p_code in perms_financeiro:
         p = Permission.objects.filter(codename=p_code).first()
@@ -39,6 +40,7 @@ def setup_permissions():
         'view_documento', 'add_documento', 'change_documento',
         'view_etapaprocesso', 'change_etapaprocesso',
         'view_tipovisto',
+        'view_lognotificacao',
     ]
     for p_code in perms_operacional:
         p = Permission.objects.filter(codename=p_code).first()
