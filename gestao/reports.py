@@ -70,52 +70,72 @@ def gerar_invoice_pdf(request, doc_entry):
     return FileResponse(buffer, as_attachment=True, filename=f"Invoice_{fatura.doc_entry}.pdf")
 
 def gerar_contrato_pdf(request, processo_id):
-    from .models import Processo, ModeloContrato
+    from .models import Processo
+    from .models_contracts import ModeloContrato
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
+    from reportlab.lib.units import cm
+    from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
+    
     processo = Processo.objects.get(id=processo_id)
     
     # Busca o melhor modelo (específico para o visto ou Geral)
     modelo = ModeloContrato.objects.filter(tipo_visto=processo.tipo_visto, ativo=True).first()
     if not modelo:
-        modelo = ModeloContrato.objects.filter(tipo_visto='GERAL', ativo=True).first()
+        modelo = ModeloContrato.objects.filter(tipo_visto__isnull=True, ativo=True).first()
     
     if not modelo:
         return HttpResponse("Nenhum modelo de contrato ativo encontrado.", status=404)
 
     # Lógica de Substituição de Variáveis
     texto_final = modelo.conteudo
-    texto_final = texto_final.replace("{{cliente_nome}}", processo.cliente.nome.upper())
-    texto_final = texto_final.replace("{{passaporte}}", processo.cliente.passaporte or "N/A")
-    texto_final = texto_final.replace("{{tipo_visto}}", processo.get_tipo_visto_display())
-    texto_final = texto_final.replace("{{data_hoje}}", timezone.now().strftime('%d/%m/%Y'))
+    texto_final = texto_final.replace("{{cliente_nome}}", f"<b>{processo.cliente.nome.upper()}</b>")
+    texto_final = texto_final.replace("{{passaporte}}", f"<b>{processo.cliente.passaporte or 'N/A'}</b>")
+    texto_final = texto_final.replace("{{tipo_visto}}", f"<b>{processo.tipo_visto.nome if processo.tipo_visto else 'N/A'}</b>")
+    texto_final = texto_final.replace("{{data_hoje}}", f"<b>{timezone.now().strftime('%d/%m/%Y')}</b>")
 
-    # Gerar PDF
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+    # Configuração do Documento
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Contrato_{processo.id}.pdf"'
     
-    p.setFont("Helvetica-Bold", 14)
-    p.drawCentredString(width/2, height - 1*inch, "CONTRATO DE PRESTAÇÃO DE SERVIÇOS")
+    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
     
-    p.setFont("Helvetica", 11)
-    text_object = p.beginText(1*inch, height - 1.5*inch)
-    text_object.setFont("Helvetica", 11)
+    # Estilos Customizados
+    style_tit = ParagraphStyle('ContractTitle', parent=styles['Normal'], fontSize=14, leading=18, alignment=TA_CENTER, fontName='Helvetica-Bold', spaceAfter=20)
+    style_body = ParagraphStyle('ContractBody', parent=styles['Normal'], fontSize=10, leading=14, alignment=TA_JUSTIFY, spaceAfter=10)
+    style_label = ParagraphStyle('SigLabel', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER)
     
-    # Quebra de linha simples para o conteúdo
-    lines = texto_final.split('\n')
-    for line in lines:
-        text_object.textLine(line)
+    elements = []
     
-    p.drawText(text_object)
+    # Cabeçalho Institucional Simples
+    elements.append(Paragraph("G IMIGRA SOLUTIONS", ParagraphStyle('H', parent=style_tit, fontSize=16, color=colors.HexColor("#002347"))))
+    elements.append(Paragraph("Consultoria Imigratória Internacional", ParagraphStyle('SH', parent=style_label, fontSize=8, color=colors.grey)))
+    elements.append(Spacer(1, 0.5*cm))
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=1*cm))
     
-    # Espaço para Assinaturas
-    y = 3*inch
-    p.line(1*inch, y, 3*inch, y)
-    p.drawString(1*inch, y - 0.2*inch, "Contrante: " + processo.cliente.nome)
+    # Título do Contrato
+    elements.append(Paragraph("CONTRATO DE PRESTAÇÃO DE SERVIÇOS", style_tit))
     
-    p.line(width - 3*inch, y, width - 1*inch, y)
-    p.drawString(width - 3*inch, y - 0.2*inch, "Contratada: G IMIGRA")
-
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename=f"Contrato_{processo.cliente.nome.replace(' ', '_')}.pdf")
+    # Conteúdo (Processando parágrafos)
+    linhas = texto_final.split('\n')
+    for linha in linhas:
+        if linha.strip():
+            elements.append(Paragraph(linha, style_body))
+        else:
+            elements.append(Spacer(1, 0.3*cm))
+            
+    # Rodapé de Assinaturas
+    elements.append(Spacer(1, 3*cm))
+    sig_data = [
+        [HRFlowable(width=6*cm, thickness=1), "", HRFlowable(width=6*cm, thickness=1)],
+        [Paragraph("G IMIGRA SOLUTIONS", style_label), "", Paragraph(processo.cliente.nome.upper(), style_label)],
+        [Paragraph("CONTRATADA", style_label), "", Paragraph("CONTRATANTE", style_label)]
+    ]
+    sig_table = Table(sig_data, colWidths=[7*cm, 2*cm, 7*cm])
+    elements.append(sig_table)
+    
+    doc.build(elements)
+    return response
