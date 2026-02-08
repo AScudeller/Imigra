@@ -125,27 +125,27 @@ class OrcamentoAdmin(SimpleHistoryAdmin):
             saldo = orc.valor_total - orc.entrada
             data_atual = timezone.now().date()
             
-            # 1. Entrada (se houver)
-            if orc.entrada > 0:
+            # 1. Entrada (Sempre a 1ª das parcelas se num_parcelas >= 1)
+            if orc.num_parcelas >= 1:
                 OrcamentoParcela.objects.create(
-                    orcamento=orc, num_parcela=0, valor=orc.entrada, data_vencimento=data_atual
+                    orcamento=orc, num_parcela=1, valor=orc.entrada if orc.entrada > 0 else orc.valor_total, data_vencimento=data_atual
                 )
             
-            # 2. Parcelas
-            if orc.num_parcelas > 0:
-                valor_parcela = (saldo / orc.num_parcelas).quantize(Decimal('0.01'))
+            # 2. Restante das Parcelas (Total - 1)
+            num_restantes = orc.num_parcelas - 1
+            if num_restantes > 0 and saldo > 0:
+                valor_parcela = (saldo / num_restantes).quantize(Decimal('0.01'))
                 
-                for i in range(1, orc.num_parcelas + 1):
+                for i in range(1, num_restantes + 1):
                     if orc.frequencia == 'SEMANAL':
                         data_venc = data_atual + timedelta(weeks=i)
                     elif orc.frequencia == 'QUINZENAL':
                         data_venc = data_atual + timedelta(days=15 * i)
                     else: # MENSAL
-                        # Aproximação simples de mês (30 dias) ou usar relativedelta para precisão SAP
                         data_venc = data_atual + timedelta(days=30 * i)
                         
                     OrcamentoParcela.objects.create(
-                        orcamento=orc, num_parcela=i, valor=valor_parcela, data_vencimento=data_venc
+                        orcamento=orc, num_parcela=i + 1, valor=valor_parcela, data_vencimento=data_venc
                     )
         self.message_user(request, "Plano de pagamento gerado com sucesso!")
 

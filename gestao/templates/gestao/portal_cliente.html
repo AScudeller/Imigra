@@ -152,6 +152,40 @@
 
             <!-- Coluna Direita: Financeiro e Docs -->
             <div class="col-lg-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>{% trans "Propostas
+                            (Orçamentos)" %}</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for orc in orcamentos %}
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">#ORC-{{ orc.id }}</small>
+                                    <span
+                                        class="badge {% if orc.status == 'ACEITO' %}bg-success{% elif orc.status == 'REJEITADO' %}bg-danger{% else %}bg-primary{% endif %}">
+                                        {{ orc.status }}
+                                    </span>
+                                </div>
+                                <div class="fw-bold text-dark">{{ orc.tipo_visto.nome }}</div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="text-primary fw-bold">${{ orc.valor_total }}</span>
+                                    <a href="{% url 'gerar_orcamento_pdf' orc.id %}" target="_blank"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-print"></i> {% trans "Ver Proposta" %}
+                                    </a>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-center text-muted py-3">
+                                {% trans "Nenhuma proposta pendente." %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="card mb-4">
                     <div class="card-header bg-white fw-bold">{% trans "Financeiro" %}</div>
                     <div class="card-body p-0">

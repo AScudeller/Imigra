@@ -74,9 +74,11 @@ def cliente_portal(request):
 
     processos = cliente.processos.all()
     faturas = cliente.faturas.all()
+    orcamentos = cliente.orcamentos.all().order_by('-data_proposta')
     
     return render(request, 'gestao/portal_cliente.html', {
         'cliente': cliente,
         'processos': processos,
-        'faturas': faturas
+        'faturas': faturas,
+        'orcamentos': orcamentos,
     })
