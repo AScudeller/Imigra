@@ -3,6 +3,7 @@ from .models_contracts import ModeloContrato
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from simple_history.models import HistoricalRecords
 
 # --- CADASTRO MESTRE (Master Data) ---
 
@@ -11,6 +12,7 @@ class TipoVisto(models.Model):
     nome = models.CharField(_("Nome do Visto"), max_length=100)
     descricao = models.TextField(_("Descrição"), blank=True)
     taxa_uscis_padrao = models.DecimalField(_("Taxa USCIS Padrão (USD)"), max_digits=10, decimal_places=2, default=0.00)
+    history = HistoricalRecords()
     
     def __str__(self):
         return f"{self.codigo} - {self.nome}"
@@ -37,6 +39,7 @@ class Lead(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_LEAD, default='NOVO')
     observacoes = models.TextField(blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"Lead: {self.nome} - {self.status}"
@@ -83,6 +86,7 @@ class Cliente(models.Model):
     
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.nome} ({self.card_code})"
@@ -124,6 +128,7 @@ class Processo(models.Model):
     
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -154,6 +159,7 @@ class EtapaProcesso(models.Model):
     concluida = models.BooleanField(_("Concluída"), default=False)
     data_conclusao = models.DateTimeField(null=True, blank=True)
     responsavel = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -190,6 +196,7 @@ class Documento(models.Model):
     comentarios = models.TextField(_("Feedback / Observações"), blank=True)
     data_upload = models.DateTimeField(auto_now_add=True)
     validade = models.DateField(_("Data de Validade"), null=True, blank=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.nome} ({self.processo.cliente.nome})"
@@ -215,6 +222,7 @@ class Fatura(models.Model):
     total_fatura = models.DecimalField(_("Total da Fatura (USD)"), max_digits=12, decimal_places=2)
     total_pago = models.DecimalField(_("Total Pago (USD)"), max_digits=12, decimal_places=2, default=0.00)
     status = models.CharField(_("Status"), max_length=15, choices=STATUS_CHOICES, default='ABERTO')
+    history = HistoricalRecords()
     
     def saldo_devedor(self):
         return self.total_fatura - self.total_pago
@@ -274,6 +282,7 @@ class Pagamento(models.Model):
     referencia = models.CharField(_("Referência/Comprovante"), max_length=100, blank=True)
     
     criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -330,6 +339,7 @@ class Despesa(models.Model):
     pago = models.BooleanField(default=False)
     data_pagamento = models.DateField(null=True, blank=True)
     comprovante = models.FileField(upload_to='comprovantes/despesas/', null=True, blank=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.descricao} - ${self.valor}"

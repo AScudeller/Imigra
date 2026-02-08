@@ -1,8 +1,9 @@
 from django.contrib import admin
 from .models import Cliente, Processo, Documento, Fatura, Parcela, Pagamento, AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, EtapaProcesso, Lead, Despesa
+from simple_history.admin import SimpleHistoryAdmin
 
 @admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
+class ClienteAdmin(SimpleHistoryAdmin):
     list_display = ('card_code', 'nome', 'email', 'telefone', 'saldo_atual')
     search_fields = ('card_code', 'nome', 'email', 'passaporte')
     list_filter = ('nacionalidade',)
@@ -20,7 +21,7 @@ class EtapaProcessoInline(admin.TabularInline):
     readonly_fields = ('data_conclusao',)
 
 @admin.register(Processo)
-class ProcessoAdmin(admin.ModelAdmin):
+class ProcessoAdmin(SimpleHistoryAdmin):
     list_display = ('id', 'cliente', 'tipo_visto', 'status', 'imprimir_contrato')
     list_filter = ('tipo_visto', 'status')
     search_fields = ('cliente__nome', 'num_recibo_uscis')
@@ -45,7 +46,7 @@ class ParcelaInline(admin.TabularInline):
     readonly_fields = ('valor_pago',)
 
 @admin.register(Fatura)
-class FaturaAdmin(admin.ModelAdmin):
+class FaturaAdmin(SimpleHistoryAdmin):
     list_display = ('doc_entry', 'cliente', 'total_fatura', 'total_pago', 'status', 'imprimir_invoice')
     list_filter = ('status', 'data_fatura')
     search_fields = ('cliente__nome',)
@@ -58,7 +59,7 @@ class FaturaAdmin(admin.ModelAdmin):
     imprimir_invoice.short_description = "Ações"
 
 @admin.register(Pagamento)
-class PagamentoAdmin(admin.ModelAdmin):
+class PagamentoAdmin(SimpleHistoryAdmin):
     list_display = ('id', 'cliente', 'valor_total', 'metodo', 'data_pagamento')
     list_filter = ('metodo', 'data_pagamento')
     search_fields = ('cliente__nome', 'referencia')
@@ -78,13 +79,13 @@ class AlocacaoPagamentoAdmin(admin.ModelAdmin):
     list_display = ('pagamento', 'parcela', 'valor_alocado')
 
 @admin.register(Lead)
-class LeadAdmin(admin.ModelAdmin):
+class LeadAdmin(SimpleHistoryAdmin):
     list_display = ('nome', 'interesse', 'status', 'criado_em')
     list_filter = ('status', 'interesse')
     search_fields = ('nome', 'email', 'telefone')
 
 @admin.register(Despesa)
-class DespesaAdmin(admin.ModelAdmin):
+class DespesaAdmin(SimpleHistoryAdmin):
     list_display = ('descricao', 'categoria', 'valor', 'data_vencimento', 'pago')
     list_filter = ('pago', 'categoria', 'data_vencimento')
     search_fields = ('descricao',)
