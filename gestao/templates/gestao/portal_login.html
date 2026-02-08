@@ -56,8 +56,11 @@
 
     <div class="login-card">
         <div class="text-center mb-4">
-            <h3 class="fw-bold">G <span class="text-primary">IMIGRA</span></h3>
-            <p class="text-muted">{% trans "Portal do Cliente" %}</p>
+            <div class="mb-3">
+                <i class="fa-solid fa-passport fa-3x text-primary"></i>
+            </div>
+            <h3 class="fw-bold mb-0">G <span class="text-primary">IMIGRA</span></h3>
+            <p class="text-muted small">{% trans "Portal do Cliente" %}</p>
         </div>
         <form method="POST">
             {% csrf_token %}
