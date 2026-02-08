@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from gestao.views import dashboard, cliente_portal, cliente_login
 from gestao.reports import gerar_invoice_pdf, gerar_contrato_pdf
+from gestao.reports_orcamento import gerar_orcamento_pdf
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,5 +27,6 @@ urlpatterns = [
     path('login/', cliente_login, name='cliente_login'),
     path('fatura/pdf/<int:doc_entry>/', gerar_invoice_pdf, name='gerar_invoice_pdf'),
     path('processo/contrato/<int:processo_id>/', gerar_contrato_pdf, name='gerar_contrato_pdf'),
+    path('orcamento/pdf/<int:orcamento_id>/', gerar_orcamento_pdf, name='gerar_orcamento_pdf'),
     path('i18n/', include('django.conf.urls.i18n')),
 ]

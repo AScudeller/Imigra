@@ -104,11 +104,17 @@ class OrcamentoParcelaInline(admin.TabularInline):
 
 @admin.register(Orcamento)
 class OrcamentoAdmin(SimpleHistoryAdmin):
-    list_display = ('id', 'cliente', 'tipo_visto', 'valor_total', 'status', 'data_proposta')
+    list_display = ('id', 'cliente', 'tipo_visto', 'valor_total', 'status', 'imprimir_orcamento')
     list_filter = ('status', 'frequencia')
     search_fields = ('cliente__nome',)
     inlines = [OrcamentoParcelaInline]
     actions = ['gerar_plano_pagamento', 'converter_para_fatura']
+
+    def imprimir_orcamento(self, obj):
+        url = reverse('gerar_orcamento_pdf', args=[obj.id])
+        return format_html('<a class="button" href="{}" target="_blank" style="background:#5e72e4; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;">Imprimir Proposta</a>', url)
+    
+    imprimir_orcamento.short_description = "Ações"
 
     def gerar_plano_pagamento(self, request, queryset):
         from datetime import timedelta
