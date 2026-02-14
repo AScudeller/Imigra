@@ -1,0 +1,228 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<style>
+    .contract-editor {
+        max-width: 1200px;
+        margin: 20px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .variables-help {
+        background: #f8f9fc;
+        border-left: 4px solid #4e73df;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+    }
+
+    .variable-tag {
+        background: #e7f3ff;
+        color: #004085;
+        padding: 4px 10px;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 4px;
+        display: inline-block;
+    }
+
+    #editor {
+        min-height: 500px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contract-editor">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-file-contract"></i> Editor de Contrato Padrão</h1>
+        <span class="badge bg-success" style="font-size: 14px;">
+            <i class="fas fa-check-circle"></i> Único para Todos os Vistos
+        </span>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> <strong>Contrato Único:</strong>
+        Este contrato será usado para <strong>todos os tipos de visto</strong>.
+        As variáveis serão substituídas automaticamente com os dados de cada cliente e processo.
+    </div>
+
+    <div class="variables-help">
+        <h5><i class="fas fa-code"></i> Variáveis Disponíveis</h5>
+        <p>Clique para copiar e cole no contrato:</p>
+
+        <div class="row">
+            <div class="col-md-4">
+                <strong>📋 Dados do Cliente:</strong><br>
+                <span class="variable-tag" onclick="copyToClipboard('{{cliente_nome}}')" style="cursor:pointer;"
+                    title="Clique para copiar">{{cliente_nome}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{passaporte}}')"
+                    style="cursor:pointer;">{{passaporte}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{email}}')"
+                    style="cursor:pointer;">{{email}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{telefone}}')"
+                    style="cursor:pointer;">{{telefone}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{nacionalidade}}')"
+                    style="cursor:pointer;">{{nacionalidade}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{endereco_eua}}')"
+                    style="cursor:pointer;">{{endereco_eua}}</span>
+            </div>
+            <div class="col-md-4">
+                <strong>📄 Dados do Processo:</strong><br>
+                <span class="variable-tag" onclick="copyToClipboard('{{tipo_visto}}')"
+                    style="cursor:pointer;">{{tipo_visto}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{data_hoje}}')"
+                    style="cursor:pointer;">{{data_hoje}}</span>
+            </div>
+            <div class="col-md-4">
+                <strong>💰 Dados Financeiros:</strong><br>
+                <span class="variable-tag" onclick="copyToClipboard('{{valor_total}}')"
+                    style="cursor:pointer;">{{valor_total}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{valor_entrada}}')"
+                    style="cursor:pointer;">{{valor_entrada}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{num_parcelas}}')"
+                    style="cursor:pointer;">{{num_parcelas}}</span>
+                <span class="variable-tag" onclick="copyToClipboard('{{frequencia_parcelas}}')"
+                    style="cursor:pointer;">{{frequencia_parcelas}}</span>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="contract-form">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <label class="form-label"><strong>Nome do Modelo</strong></label>
+            <input type="text" name="nome" id="nome_modelo" class="form-control"
+                value="{{ contrato.nome|default:'Contrato Padrão G IMIGRA' }}" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label"><strong>Conteúdo do Contrato</strong></label>
+            <div id="editor"></div>
+            <textarea name="conteudo" id="conteudo_hidden" style="display:none;"></textarea>
+        </div>
+
+        <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" name="ativo" id="ativo" {% if not contrato or contrato.ativo
+                %}checked{% endif %}>
+            <label class="form-check-label" for="ativo">
+                <strong>Contrato Ativo</strong> (desmarque para desativar temporariamente)
+            </label>
+        </div>
+
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-save"></i> Salvar Contrato
+            </button>
+            <button type="button" class="btn btn-info btn-lg" onclick="previsualizar()">
+                <i class="fas fa-eye"></i> Pré-visualizar
+            </button>
+            <a href="/admin/gestao/modelocontrato/" class="btn btn-secondary btn-lg">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let quill;
+
+    // Inicializar Quill Editor
+    document.addEventListener('DOMContentLoaded', function () {
+        quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // Carregar conteúdo existente
+        {% if contrato %}
+        quill.root.innerHTML = "{{ contrato.conteudo|safe|escapejs }}";
+        {% else %}
+        quill.root.innerHTML = `<h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE CONSULTORIA IMIGRATÓRIA</h2>
+<p>Pelo presente instrumento, <strong>G IMIGRA SOLUTIONS</strong>, doravante denominada CONTRATADA, e {{cliente_nome}}, portador(a) do passaporte {{passaporte}}, doravante denominado(a) CONTRATANTE, estabelecem o seguinte:</p>
+
+<h3>1. OBJETO DO CONTRATO</h3>
+<p>A CONTRATADA prestará serviços de consultoria imigratória para obtenção do visto {{tipo_visto}}.</p>
+
+<h3>2. VALOR E FORMA DE PAGAMENTO</h3>
+<p>O valor total dos serviços é de {{valor_total}}, sendo:</p>
+<ul>
+  <li>Entrada: {{valor_entrada}}</li>
+  <li>Saldo: Parcelado em {{num_parcelas}}x ({{frequencia_parcelas}})</li>
+</ul>
+
+<h3>3. DADOS DO CONTRATANTE</h3>
+<ul>
+  <li>Email: {{email}}</li>
+  <li>Telefone: {{telefone}}</li>
+  <li>Nacionalidade: {{nacionalidade}}</li>
+</ul>
+
+<p>Data: {{data_hoje}}</p>`;
+        {% endif %}
+    });
+
+    document.getElementById('contract-form').addEventListener('submit', function (e) {
+        // Transferir conteúdo do Quill para textarea hidden
+        document.getElementById('conteudo_hidden').value = quill.root.innerHTML;
+    });
+
+    function previsualizar() {
+        const conteudo = quill.root.innerHTML;
+        const preview = window.open('', 'Preview', 'width=900,height=700');
+        preview.document.write(`
+            <html>
+            <head>
+                <title>Pré-visualização do Contrato</title>
+                <style>
+                    body { 
+                        font-family: 'Times New Roman', serif; 
+                        padding: 60px; 
+                        line-height: 1.8; 
+                        max-width: 800px;
+                        margin: 0 auto;
+                    }
+                    h1, h2, h3 { color: #002347; }
+                    h2 { text-align: center; margin-bottom: 30px; }
+                </style>
+            </head>
+            <body>${conteudo}</body>
+            </html>
+        `);
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Variável copiada: ' + text);
+        });
+    }
+</script>
+{% endblock %}

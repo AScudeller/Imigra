@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G IMIGRA | {% block title %}Dashboard{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #004085;
+            --secondary-color: #2c3e50;
+            --accent-color: #e67e22;
+            --light-bg: #f8f9fc;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            background: var(--secondary-color);
+            color: white;
+            transition: all 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+            /* Adicionado scroll */
+        }
+
+        #sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 15px 25px;
+            border-left: 4px solid transparent;
+        }
+
+        #sidebar .nav-link:hover,
+        #sidebar .nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        #content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            border-radius: 10px;
+        }
+
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e3e6f0;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .metric-card {
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .text-usd {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+    </style>
+    {% block css %}{% endblock %}
+</head>
+
+<body>
+    <div id="sidebar" class="d-flex flex-column p-0">
+        <div class="p-4 text-center">
+            <div class="mb-2">
+                <i class="fa-solid fa-passport fa-2x text-warning"></i>
+            </div>
+            <h4 class="fw-bold text-white mb-0">G <span class="text-warning">IMIGRA</span></h4>
+            <small class="text-white-50 text-uppercase tracking-wider"
+                style="font-size: 0.65rem; letter-spacing: 1px;">Gestão Imigratória</small>
+        </div>
+        <ul class="nav nav-pills flex-column mb-auto mt-3">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link active">
+                    <i class="fa-solid fa-gauge me-2"></i> Dashboard
+                </a>
+            </li>
+            {% if perms.gestao.view_cliente %}
+            <li class="nav-item">
+                <a href="/admin/gestao/cliente/" class="nav-link">
+                    <i class="fa-solid fa-users me-2"></i> Clientes
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_lead %}
+            <li class="nav-item">
+                <a href="/admin/gestao/lead/" class="nav-link">
+                    <i class="fa-solid fa-users-viewfinder me-2"></i> Leads (CRM)
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_despesa %}
+            <li class="nav-item">
+                <a href="/admin/gestao/despesa/" class="nav-link">
+                    <i class="fa-solid fa-money-bill-transfer me-2"></i> Contas a Pagar
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_tipovisto %}
+            <li class="nav-item">
+                <a href="/admin/gestao/tipovisto/" class="nav-link">
+                    <i class="fa-solid fa-passport me-2"></i> Tipos de Vistos
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_processo %}
+            <li class="nav-item">
+                <a href="/admin/gestao/processo/" class="nav-link">
+                    <i class="fa-solid fa-briefcase me-2"></i> Processos
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_lognotificacao %}
+            <li class="nav-item">
+                <a href="/admin/gestao/lognotificacao/" class="nav-link">
+                    <i class="fa-solid fa-comments me-2"></i> Comunicação (Logs)
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_orcamento %}
+            <li class="nav-item">
+                <a href="/admin/gestao/orcamento/" class="nav-link">
+                    <i class="fa-solid fa-file-signature me-2"></i> Orçamentos (Propostas)
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_fatura %}
+            <li class="nav-item">
+                <a href="/admin/gestao/fatura/" class="nav-link">
+                    <i class="fa-solid fa-file-invoice-dollar me-2"></i> Faturas (Financeiro)
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestao.view_pagamento %}
+            <li class="nav-item">
+                <a href="/admin/gestao/pagamento/" class="nav-link">
+                    <i class="fa-solid fa-money-bill-wave me-2"></i> Pagamentos
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- SEÇÃO DE RELATÓRIOS FINANCEIROS -->
+            {% if perms.gestao.view_fatura or perms.gestao.view_pagamento %}
+            <li class="nav-item mt-4">
+                <span class="text-muted small fw-bold px-3 text-uppercase">Relatórios</span>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'relatorio_inadimplencia' %}" class="nav-link">
+                    <i class="fa-solid fa-chart-line me-2"></i> Inadimplência (Aging)
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- SEÇÃO DE CONFIGURAÇÕES -->
+            {% if user.is_staff %}
+            <li class="nav-item mt-4">
+                <span class="text-muted small fw-bold px-3 text-uppercase">Configurações</span>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'editor_contrato_unico' %}" class="nav-link">
+                    <i class="fa-solid fa-file-contract me-2"></i> Contrato Padrão
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- SEÇÃO DE ADMINISTRAÇÃO (SAP STYLE) -->
+            {% if user.is_superuser %}
+            <li class="nav-item mt-4">
+                <span class="text-muted small fw-bold px-3 text-uppercase">Administração</span>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/auth/user/" class="nav-link">
+                    <i class="fa-solid fa-user-gear me-2"></i> Usuários (Manutenção)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/auth/group/" class="nav-link">
+                    <i class="fa-solid fa-shield-halved me-2"></i> Autorizações (Grupos)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'backup_sistema' %}" class="nav-link">
+                    <i class="fa-solid fa-database me-2"></i> Backup do Sistema
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+        <div class="p-4 mt-auto">
+            <hr>
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                    id="dropdownUser1" data-bs-toggle="dropdown">
+                    <img src="https://ui-avatars.com/api/?name={{ user.username }}" alt="" width="32" height="32"
+                        class="rounded-circle me-2">
+                    <strong>{{ user.username }}</strong>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                    <li><a class="dropdown-item" href="/admin/password_change/">Mudar Senha</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="/admin/logout/">Sair</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="content">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1 text-secondary">{% block page_title %}Dashboard{% endblock %}</span>
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <span class="badge bg-light text-dark p-2 border">
+                            <i class="fa-regular fa-calendar me-1"></i> {% now "F d, Y" %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block js %}{% endblock %}
+</body>
+
+</html>

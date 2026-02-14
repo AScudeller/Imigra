@@ -1,0 +1,4 @@
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+SELECT "Usuario root com acesso remoto HABILITADO!" as Mensagem;

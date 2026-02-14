@@ -1,0 +1,228 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<style>
+    .total-card {
+        background: #2dce89;
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: right;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .filter-box {
+        background: #f8f9fc;
+        padding: 15px;
+        border: 1px solid #e3e6f0;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    table.dataTable thead {
+        background-color: #4e73df;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>{% trans "Nova Baixa de Pagamento / Contas a Receber" %}</h1>
+
+    <form method="post" id="baixa-form">
+        {% csrf_token %}
+
+        <div class="row">
+            <!-- Dados do Pagamento -->
+            <div class="col-md-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Dados do Recebimento</h6>
+                    </div>
+                    <div class="card-body">
+                        {{ form.as_p }}
+                    </div>
+                </div>
+
+                <div class="total-card shadow">
+                    Total a Receber: <span id="display-total">US$ 0.00</span>
+                </div>
+
+                <button type="submit" class="btn btn-success btn-lg btn-block mt-3 shadow">
+                    <i class="fas fa-check-circle"></i> Confirmar Baixa
+                </button>
+            </div>
+
+            <!-- Seleção de Títulos -->
+            <div class="col-md-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">Títulos em Aberto (Contas a Receber)</h6>
+                        <button type="button" class="btn btn-sm btn-info" id="btn-refresh-titulos">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="card-body bg-light border-bottom">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label>Vencimento De:</label>
+                                {{ filtro_form.data_inicio }}
+                            </div>
+                            <div class="col-md-4">
+                                <label>Vencimento Até:</label>
+                                {{ filtro_form.data_fim }}
+                            </div>
+                            <div class="col-md-4">
+                                <label>Status:</label>
+                                {{ filtro_form.status }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mb-0" id="tabela-parcelas">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 50px;"><input type="checkbox"
+                                                id="check-all"></th>
+                                        <th>Fatura / Parcela</th>
+                                        <th>Vencimento</th>
+                                        <th class="text-right">Valor Orig.</th>
+                                        <th class="text-right">Saldo Devedor</th>
+                                        <th class="text-right" style="width: 150px;">A Pagar (USD)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="text-center p-4 text-muted">Selecione um cliente para
+                                            carregar os títulos.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.select2').select2();
+
+        const $clienteSelect = $('#id_cliente');
+        const $tabelaBody = $('#tabela-parcelas tbody');
+        const $totalDisplay = $('#display-total');
+        const $totalInput = $('#id_valor_total');
+        const $btnRefresh = $('#btn-refresh-titulos');
+
+        // Filtros
+        const $dataIni = $('#id_data_inicio');
+        const $dataFim = $('#id_data_fim');
+        const $status = $('#id_status');
+
+        function carregarParcelas() {
+            const clienteId = $clienteSelect.val();
+            if (!clienteId) return;
+
+            $tabelaBody.html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>');
+
+            $.ajax({
+                url: '{% url "api_parcelas_cliente" %}',
+                data: {
+                    cliente_id: clienteId,
+                    data_inicio: $dataIni.val(),
+                    data_fim: $dataFim.val(),
+                    status: $status.val()
+                },
+                success: function (data) {
+                    $tabelaBody.empty();
+
+                    if (data.parcelas.length === 0) {
+                        $tabelaBody.html('<tr><td colspan="6" class="text-center text-muted">Nenhum título em aberto encontrado.</td></tr>');
+                        return;
+                    }
+
+                    data.parcelas.forEach(p => {
+                        const row = `
+                            <tr class="${p.atrasado ? 'table-danger' : ''}">
+                                <td class="text-center">
+                                    <input type="checkbox" name="parcelas_selecionadas" value="${p.id}" class="check-parcela" data-saldo="${p.saldo}">
+                                </td>
+                                <td>
+                                    <strong>Fat #${p.fatura_id}</strong> / Parc ${p.num_parcela}
+                                    ${p.atrasado ? '<span class="badge badge-danger">Atrasado</span>' : ''}
+                                </td>
+                                <td>${p.vencimento_fmt}</td>
+                                <td class="text-right">US$ ${p.valor_total_fmt}</td>
+                                <td class="text-right font-weight-bold">US$ ${p.saldo_fmt}</td>
+                                <td>
+                                    <input type="number" name="valor_pagar_${p.id}" class="form-control form-control-sm text-right input-valor-pagar" 
+                                           step="0.01" min="0" max="${p.saldo}" value="${p.saldo}" disabled>
+                                </td>
+                            </tr>
+                        `;
+                        $tabelaBody.append(row);
+                    });
+                    calcularTotal();
+                }
+            });
+        }
+
+        $clienteSelect.on('change', carregarParcelas);
+        $btnRefresh.on('click', carregarParcelas);
+        $dataIni.on('change', carregarParcelas);
+        $dataFim.on('change', carregarParcelas);
+        $status.on('change', carregarParcelas);
+
+        // Checkbox Individual
+        $(document).on('change', '.check-parcela', function () {
+            const $row = $(this).closest('tr');
+            const $input = $row.find('.input-valor-pagar');
+
+            if ($(this).is(':checked')) {
+                $input.prop('disabled', false);
+            } else {
+                $input.prop('disabled', true);
+                // Reset value to full balance for next check, or current input? Keep current logic simple.
+                $input.val($(this).data('saldo'));
+            }
+            calcularTotal();
+        });
+
+        // Check All
+        $('#check-all').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            $('.check-parcela').prop('checked', isChecked).trigger('change');
+        });
+
+        // Valor Input Alterado
+        $(document).on('input', '.input-valor-pagar', function () {
+            calcularTotal();
+        });
+
+        function calcularTotal() {
+            let total = 0;
+            $('.check-parcela:checked').each(function () {
+                const $row = $(this).closest('tr');
+                const val = parseFloat($row.find('.input-valor-pagar').val()) || 0;
+                total += val;
+            });
+
+            $totalInput.val(total.toFixed(2));
+            $totalDisplay.text('US$ ' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        }
+    });
+</script>
+{% endblock %}

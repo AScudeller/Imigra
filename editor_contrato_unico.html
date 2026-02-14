@@ -1,0 +1,245 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<style>
+    .contract-editor {
+        max-width: 1200px;
+        margin: 20px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .variables-help {
+        background: #f8f9fc;
+        border-left: 4px solid #4e73df;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+    }
+
+    .variable-tag {
+        background: #f0f4ff;
+        color: #4e73df;
+        border: 1px solid #d1d3e2;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        margin: 5px;
+        display: inline-block;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+    .variable-tag:hover {
+        background: #4e73df;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(78, 115, 223, 0.2);
+    }
+
+    .variable-tag:active {
+        transform: translateY(0);
+    }
+
+    .variable-tag.copied {
+        background: #1cc88a !important;
+        color: white !important;
+        border-color: #1cc88a !important;
+    }
+
+    #editor {
+        min-height: 500px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contract-editor">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-file-contract"></i> Editor de Contrato Padrão</h1>
+        <span class="badge bg-success" style="font-size: 14px;">
+            <i class="fas fa-check-circle"></i> Único para Todos os Vistos
+        </span>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> <strong>Contrato Único:</strong>
+        Este contrato será usado para <strong>todos os tipos de visto</strong>.
+        As variáveis serão substituídas automaticamente com os dados de cada cliente e processo.
+    </div>
+
+    <div class="variables-help">
+        <h5 class="mb-3 text-primary"><i class="fas fa-code"></i> VARIÁVEIS DISPONÍVEIS</h5>
+        <p class="text-muted small mb-3">Clique em uma variável abaixo para copiar e cole no texto do contrato:</p>
+
+        {% verbatim %}
+        <div class="row g-4">
+            <div class="col-md-4 border-end">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="fs-5 me-2">📋</span>
+                    <strong class="text-dark">Dados do Cliente e Processo</strong>
+                </div>
+                <div class="d-flex flex-wrap">
+                    <span class="variable-tag" onclick="copyVar('{{cliente_nome}}', this)"
+                        title="Nome completo do cliente">{{cliente_nome}}</span>
+                    <span class="variable-tag" onclick="copyVar('{{tipo_visto}}', this)"
+                        title="Tipo de visto/processo">{{tipo_visto}}</span>
+                    <span class="variable-tag" onclick="copyVar('{{data_hoje}}', this)"
+                        title="Data atual (DD/MM/AAAA)">{{data_hoje}}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="fs-5 me-2">💰</span>
+                    <strong class="text-dark">Dados Financeiros</strong>
+                </div>
+                <div class="d-flex flex-wrap">
+                    <span class="variable-tag" onclick="copyVar('{{valor_total}}', this)"
+                        title="Valor total do orçamento">{{valor_total}}</span>
+                    <span class="variable-tag" onclick="copyVar('{{forma_pagamento}}', this)"
+                        style="border: 2px dashed #4e73df;"
+                        title="Tabela completa: Valor total, entrada, parcelas e vencimentos">
+                        <i class="fas fa-table me-1"></i> {{forma_pagamento}}
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="fs-5 me-2">✂️</span>
+                    <strong class="text-dark">Ferramentas de Layout</strong>
+                </div>
+                <div class="d-flex flex-wrap">
+                    <span class="variable-tag" onclick="copyVar('{{quebra_pagina}}', this)"
+                        style="background-color: #2c3e50; border-color: #2c3e50; color: white;"
+                        title="Insere uma quebra de página automática no PDF">
+                        <i class="fas fa-cut me-1"></i> {{quebra_pagina}}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endverbatim %}
+    </div>
+
+    <form method="post" id="contract-form">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <label class="form-label"><strong>Nome do Modelo</strong></label>
+            <input type="text" name="nome" id="nome_modelo" class="form-control"
+                value="{{ contrato.nome|default:'Contrato Padrão G IMIGRA' }}" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label"><strong>Conteúdo do Contrato</strong></label>
+            <div id="editor"></div>
+            <textarea name="conteudo" id="conteudo_hidden" style="display:none;"></textarea>
+        </div>
+
+        <div class="form-check mb-4">
+            {% if not contrato or contrato.ativo %}
+            <input class="form-check-input" type="checkbox" name="ativo" id="ativo" checked>
+            {% else %}
+            <input class="form-check-input" type="checkbox" name="ativo" id="ativo">
+            {% endif %}
+            <label class="form-check-label" for="ativo">
+                <strong>Contrato Ativo</strong>
+            </label>
+        </div>
+
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-save"></i> Salvar Contrato
+            </button>
+            <button type="button" class="btn btn-info btn-lg" onclick="previsualizar()">
+                <i class="fas fa-eye"></i> Pré-visualizar
+            </button>
+            <a href="/admin/gestao/modelocontrato/" class="btn btn-secondary btn-lg">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Conteúdo inicial para o editor (evita erros de sintaxe JS com tags Django) -->
+<textarea id="contrato-inicial" style="display:none;">
+{% if contrato %}{{ contrato.conteudo|safe }}{% else %}{% verbatim %}<h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h2>
+<p>Pelo presente instrumento, <strong>G IMIGRA SOLUTIONS</strong> e {{cliente_nome}}, estabelecem o seguinte:</p>
+
+<h3>1. OBJETO DO CONTRATO</h3>
+<p>Prestação de serviços para o processo de {{tipo_visto}}.</p>
+
+<h3>2. VALOR E FORMA DE PAGAMENTO</h3>
+<p>O Valor Total do serviço é de {{valor_total}}.</p>
+{{forma_pagamento}}
+
+<p>Data: {{data_hoje}}</p>{% endverbatim %}{% endif %}
+</textarea>
+<script>
+    let quill;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
+            }
+        });
+
+        const initialContent = document.getElementById('contrato-inicial').value;
+        quill.root.innerHTML = initialContent;
+    });
+
+    document.getElementById('contract-form').addEventListener('submit', function (e) {
+        document.getElementById('conteudo_hidden').value = quill.root.innerHTML;
+    });
+
+    function previsualizar() {
+        const conteudo = quill.root.innerHTML;
+        const preview = window.open('', 'Preview', 'width=900,height=700');
+        preview.document.write(`<html><body>${conteudo}</body></html>`);
+    }
+
+    function copyVar(text, el) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Feedback visual
+            el.classList.add('copied');
+            const originalText = el.innerHTML;
+            el.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+
+            setTimeout(() => {
+                el.classList.remove('copied');
+                el.innerHTML = originalText;
+            }, 1000);
+        });
+    }
+</script>
+{% endblock %}

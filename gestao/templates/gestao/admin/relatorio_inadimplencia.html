@@ -1,0 +1,155 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .card-dashboard {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .badge-aging {
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: white;
+    }
+
+    .bg-current {
+        background-color: #28a745;
+    }
+
+    .bg-30 {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .bg-60 {
+        background-color: #fd7e14;
+    }
+
+    .bg-90 {
+        background-color: #dc3545;
+    }
+
+    .bg-90-plus {
+        background-color: #6c757d;
+    }
+
+    table.dataTable {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table.dataTable th,
+    table.dataTable td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+        text-align: left;
+    }
+
+    table.dataTable th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .total-row {
+        font-weight: bold;
+        background-color: #f1f3f5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>{% trans "Relatório de Inadimplência (Aging Report)" %}</h1>
+
+    <div class="row">
+        <!-- KPI Cards -->
+        <div class="col-md-3">
+            <div class="card-dashboard text-center">
+                <h3 class="text-success">$ {{ total_adimplente|floatformat:2 }}</h3>
+                <small class="text-muted">A Vencer (Adimplente)</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-dashboard text-center">
+                <h3 class="text-warning">$ {{ total_30|floatformat:2 }}</h3>
+                <small class="text-muted">Atraso 1-30 Dias</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-dashboard text-center">
+                <h3 class="text-danger">$ {{ total_60_plus|floatformat:2 }}</h3>
+                <small class="text-muted">Atraso > 30 Dias (Crítico)</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-dashboard text-center">
+                <h3 class="text-dark">$ {{ total_geral_devido|floatformat:2 }}</h3>
+                <small class="text-muted">Total Geral a Receber</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-dashboard">
+        <h4 class="mb-4">Detalhamento por Cliente</h4>
+        <div class="table-responsive">
+            <table class="dataTable">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th class="text-right">A Vencer</th>
+                        <th class="text-right">1-30 Dias</th>
+                        <th class="text-right">31-60 Dias</th>
+                        <th class="text-right">61-90 Dias</th>
+                        <th class="text-right">> 90 Dias</th>
+                        <th class="text-right">Total Devido</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in dados_clientes %}
+                    <tr>
+                        <td>
+                            <a href="/admin/gestao/cliente/{{ item.cliente_id }}/change/">
+                                <strong>{{ item.nome }}</strong>
+                            </a>
+                            <br>
+                            <small class="text-muted">{{ item.email }}</small>
+                        </td>
+                        <td class="text-right text-success">$ {{ item.current|floatformat:2 }}</td>
+                        <td class="text-right {% if item.d30 > 0 %}text-warning font-weight-bold{% endif %}">$ {{
+                            item.d30|floatformat:2 }}</td>
+                        <td class="text-right {% if item.d60 > 0 %}text-danger font-weight-bold{% endif %}">$ {{
+                            item.d60|floatformat:2 }}</td>
+                        <td class="text-right {% if item.d90 > 0 %}text-danger font-weight-bold{% endif %}">$ {{
+                            item.d90|floatformat:2 }}</td>
+                        <td class="text-right {% if item.d90_plus > 0 %}text-dark font-weight-bold{% endif %}">$ {{
+                            item.d90_plus|floatformat:2 }}</td>
+                        <td class="text-right font-weight-bold">$ {{ item.total|floatformat:2 }}</td>
+                        <td class="text-center">
+                            <a href="/admin/gestao/pagamento/novo-recebimento/?cliente_id={{ item.cliente_id }}"
+                                class="btn btn-sm btn-success" title="Baixar">
+                                <i class="fas fa-dollar-sign"></i> Pagar
+                            </a>
+                            <a href="#" class="btn btn-sm btn-warning" title="Notificar">
+                                <i class="fas fa-bell"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">Nenhum registro de inadimplência encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

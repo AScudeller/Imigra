@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+
+{% block branding %}
+<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+    <h1 id="site-name"><a href="{% url 'admin:index' %}">G IMIGRA</a></h1>
+    <div style="margin-left: 20px;">
+        <a href="/" class="button"
+            style="background: #e67e22; color: white; padding: 5px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px;">
+            <i class="fas fa-gauge"></i> IR PARA DASHBOARD
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    #header {
+        background: #2c3e50 !important;
+    }
+
+    #branding h1 a {
+        color: #fff !important;
+    }
+
+    div.breadcrumbs {
+        background: #f8f9fc !important;
+        border-bottom: 1px solid #e3e6f0;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #{{ fatura.doc_entry }} - G IMIGRA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sap-navy: #002347;
+            --sap-gold: #D4AF37;
+            --sap-grey: #f4f7f6;
+            --sap-border: #e3e6f0;
+            --sap-text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #525659;
+            color: var(--sap-text);
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 10mm auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+
+            .page {
+                margin: 0;
+                box-shadow: none;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+
+        /* Toolbar */
+        .no-print-toolbar {
+            background: #323639;
+            padding: 10px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .btn-print {
+            background: var(--sap-navy);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-print:hover {
+            background: #003a75;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--sap-navy);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-symbol {
+            width: 50px;
+            height: 50px;
+            background: var(--sap-navy);
+            color: var(--sap-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 700;
+            border-radius: 8px;
+            margin-right: 15px;
+        }
+
+        .logo-text b {
+            color: var(--sap-navy);
+            font-size: 24px;
+        }
+
+        .logo-text span {
+            color: var(--sap-gold);
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo-subtitle {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #777;
+            margin-top: -5px;
+        }
+
+        .invoice-title {
+            text-align: right;
+        }
+
+        .invoice-title h1 {
+            color: var(--sap-navy);
+            margin: 0;
+            font-size: 32px;
+            text-transform: uppercase;
+        }
+
+        .invoice-meta {
+            text-align: right;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* Business Info */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .info-section h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #777;
+            border-bottom: 1px solid var(--sap-border);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .info-content {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            background: var(--sap-navy);
+            color: white;
+            text-align: left;
+            padding: 12px 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--sap-border);
+            font-size: 13px;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Financials */
+        .financials {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-box {
+            width: 250px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .total-row.grand-total {
+            border-top: 2px solid var(--sap-navy);
+            margin-top: 10px;
+            padding-top: 15px;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--sap-navy);
+        }
+
+        /* Installments */
+        .installments {
+            margin-top: 40px;
+        }
+
+        .installments h3 {
+            font-size: 14px;
+            color: var(--sap-navy);
+            margin-bottom: 15px;
+        }
+
+        .inst-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .inst-card {
+            border: 1px solid var(--sap-border);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            background: var(--sap-grey);
+        }
+
+        .inst-card.paid {
+            border-left: 4px solid #28a745;
+        }
+
+        .inst-card.pending {
+            border-left: 4px solid #ffc107;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 10px;
+            color: #aaa;
+            border-top: 1px solid var(--sap-border);
+            padding-top: 10px;
+        }
+
+        .status-stamp {
+            position: absolute;
+            top: 150px;
+            right: 50px;
+            transform: rotate(-15deg);
+            border: 4px solid;
+            padding: 10px 20px;
+            font-size: 30px;
+            font-weight: 800;
+            border-radius: 10px;
+            opacity: 0.15;
+            text-transform: uppercase;
+        }
+
+        .stamp-paid {
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .stamp-open {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .stamp-cancelled {
+            color: #6c757d;
+            border-color: #6c757d;
+            opacity: 0.8 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="no-print-toolbar no-print">
+        <button class="btn-print" onclick="window.print()">
+            <i class="fas fa-print"></i> IMPRIMIR INVOICE / ESCOLHER IMPRESSORA
+        </button>
+        <p style="color: #ccc; font-size: 11px; margin-top: 8px;">
+            Dica: No destino da impressão, você pode selecionar "Salvar como PDF" ou sua impressora física.
+        </p>
+    </div>
+
+    <div class="page">
+        <!-- Status Stamp -->
+        {% if fatura.status == 'PAGO' %}
+        <div class="status-stamp stamp-paid">PAID</div>
+        {% elif fatura.status == 'CANCELADO' %}
+        <div class="status-stamp stamp-cancelled" style="opacity: 0.8; z-index: 10;">VOID / CANCELLED</div>
+        {% else %}
+        <div class="status-stamp stamp-open">OPEN / OUTSTANDING</div>
+        {% endif %}
+
+        <div class="header">
+            <div class="logo-container">
+                <div class="logo-symbol">G</div>
+                <div>
+                    <div class="logo-text"><b>G</b><span>IMIGRA</span></div>
+                    <div class="logo-subtitle">IMMIGRATION EXCELLENCE</div>
+                </div>
+            </div>
+            <div class="invoice-title">
+                <h1>INVOICE</h1>
+                <div class="invoice-meta">
+                    <b>DOC #:</b> {{ fatura.doc_entry }}<br>
+                    <b>DATE:</b> {{ fatura.data_fatura|date:"m/d/Y" }}<br>
+                    <b>STATUS:</b> {{ fatura.get_status_display }}
+                </div>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-section">
+                <h3>FROM / ISSUER</h3>
+                <div class="info-content">
+                    <strong>G IMIGRA SOLUTIONS</strong><br>
+                    International Immigration Consulting<br>
+                    Orlando, FL - United States<br>
+                    gimigrausa@gmail.com<br>
+                    www.gimigra.com
+                </div>
+            </div>
+            <div class="info-section">
+                <h3>BILL TO / CUSTOMER</h3>
+                <div class="info-content">
+                    <strong>{{ fatura.cliente.nome|upper }}</strong><br>
+                    Passport: {{ fatura.cliente.passaporte|default:"---" }}<br>
+                    E-mail: {{ fatura.cliente.email }}<br>
+                    Phone: {{ fatura.cliente.telefone }}
+                </div>
+            </div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">ITEM</th>
+                    <th style="width: 70%;">DESCRIPTION OF SERVICES</th>
+                    <th style="width: 20%; text-align: right;">TOTAL (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>01</td>
+                    <td>
+                        <strong>Immigration Legal Fees / Consultancy</strong><br>
+                        <small>Case/Visa Type: {{ fatura.processo.tipo_visto.nome|default:"General Services" }}</small>
+                    </td>
+                    <td style="text-align: right;">US$ {{ fatura.total_fatura|floatformat:2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="financials">
+            <div class="totals-box">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>US$ {{ fatura.total_fatura|floatformat:2 }}</span>
+                </div>
+                <div class="total-row">
+                    <span>Total Paid:</span>
+                    <span style="color: #28a745;">US$ {{ fatura.total_pago|floatformat:2 }}</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>BALANCE DUE:</span>
+                    <span>US$ {{ fatura.saldo_devedor|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if fatura.parcelas.all %}
+        <div class="installments">
+            <h3>PAYMENT SCHEDULE</h3>
+            <div class="inst-grid">
+                {% for p in fatura.parcelas.all %}
+                <div class="inst-card {% if p.valor_pago >= p.valor_parcela %}paid{% else %}pending{% endif %}">
+                    <b>INSTALLMENT {{ p.num_parcela }}</b><br>
+                    Due Date: {{ p.data_vencimento|date:"m/d/Y" }}<br>
+                    Amount: US$ {{ p.valor_parcela|floatformat:2 }}<br>
+                    Status: {% if p.valor_pago >= p.valor_parcela %}PAID{% else %}UNPAID{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            G IMIGRA - Immigration Excellence. This document is an official invoice.<br>
+            Please keep this for your records. For payment inquiries, contact gimigrausa@gmail.com
+        </div>
+    </div>
+
+    <!-- FontAwesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+
+</html>

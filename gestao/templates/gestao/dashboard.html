@@ -1,0 +1,250 @@
+{% extends 'gestao/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Faturado -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Faturado</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">US$ {{ total_faturado|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recebido -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Recebido</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">US$ {{ total_recebido|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- A Receber -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">A Receber (Saldo)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">US$ {{ total_a_receber|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Atrasado (Danger) -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger h-100 py-2 bg-light">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Vencido / Atrasado</div>
+                        <div class="h5 mb-0 font-weight-bold text-danger">US$ {{ total_atrasado|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SEÇÃO DE ALERTAS PROATIVOS -->
+{% if parcelas_alerta or docs_alerta %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-header bg-warning text-dark fw-bold">
+                <i class="fas fa-bell me-2"></i> Próximos Vencimentos (Alerta 5 dias)
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for p in parcelas_alerta %}
+                    <div class="col-md-4 mb-2">
+                        <div class="alert alert-light border-warning mb-0 p-2 small">
+                            <strong>Parcela:</strong> {{ p.fatura.cliente.nome }}<br>
+                            Vence: {{ p.data_vencimento|date:"d/m/Y" }} -
+                            <span class="text-danger fw-bold">US$ {{ p.valor_parcela|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% for doc in docs_alerta %}
+                    <div class="col-md-4 mb-2">
+                        <div class="alert alert-light border-info mb-0 p-2 small">
+                            <strong>Doc:</strong> {{ doc.processo.cliente.nome }}<br>
+                            {{ doc.nome }} - Expira em: {{ doc.validade|date:"d/m/Y" }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Status dos Processos -->
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Distribuição de Casos Imigratórios</span>
+                <span class="badge bg-primary">{{ total_processos }} Ativos</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Status do Processo</th>
+                                <th class="text-center">Quantidade</th>
+                                <th>Progresso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in processos_por_status %}
+                            <tr>
+                                <td>{{ item.status }}</td>
+                                <td class="text-center"><span class="badge bg-dark">{{ item.total }}</span></td>
+                                <td>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-info" style="width: 45%;"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Nenhum processo cadastrado.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimos Pagamentos -->
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header">Últimos Pagamentos Recebidos</div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for pgto in ultimos_pagamentos %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <div class="fw-bold">{{ pgto.cliente.nome }}</div>
+                            <small class="text-muted">{{ pgto.get_metodo_display }} | {{ pgto.data_pagamento }}</small>
+                        </div>
+                        <span class="text-success fw-bold">+ US$ {{ pgto.valor_total|floatformat:2 }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center text-muted p-3">Nenhum pagamento registrado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-footer text-center">
+                <a href="/admin/gestao/pagamento/" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">Novos Clientes no Sistema</div>
+            <div class="card-body">
+                <div class="row">
+                    {% for cliente in ultimos_clientes %}
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex align-items-center p-3 border rounded">
+                            <img src="https://ui-avatars.com/api/?name={{ cliente.nome }}&background=random"
+                                class="rounded-circle me-3" width="45">
+                            <div>
+                                <div class="fw-bold">{{ cliente.nome }}</div>
+                                <div class="text-muted small">{{ cliente.card_code }} | {{ cliente.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Biblioteca de Vistos Cadastrados (G IMIGRA)</span>
+                <a href="/admin/gestao/tipovisto/" class="btn btn-sm btn-primary">Gerenciar Todos</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for visto in todos_vistos %}
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                        <div class="p-3 border rounded h-100 bg-white shadow-sm">
+                            <div class="fw-bold text-primary">{{ visto.codigo }}</div>
+                            <div class="text-muted small text-truncate" title="{{ visto.nome }}">{{ visto.nome }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+
+    .border-left-danger {
+        border-left: 0.25rem solid #e74a3b !important;
+    }
+
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+
+    .text-xs {
+        font-size: .7rem;
+    }
+</style>
+{% endblock %}

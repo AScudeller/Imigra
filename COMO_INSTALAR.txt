@@ -1,0 +1,21 @@
+GUIA DE INSTALAÇÃO - SERVIDOR NOVO
+
+Passo 1: Banco de Dados
+1. Abra o XAMPP e inicie o MySQL e o Apache.
+2. Acesse http://localhost/phpmyadmin
+3. Vá em "Importar" e selecione o arquivo "banco_erp_imigracao.sql". Clique em Executar.
+4. Repita para o arquivo "banco_iamoveis.sql".
+
+Passo 2: Sistema PHP (IAMoveis)
+1. Pegue a pasta "iamoveis" deste pacote.
+2. Cole ela dentro de C:\xampp\htdocs.
+3. Acesse http://localhost/iamoveis para testar.
+
+Passo 3: Sistema Python (ERP)
+1. Copie a pasta "ERP_imigracao" para C:\Sistemas.
+2. Instale o Python.
+3. Abra o CMD na pasta, crie o ambiente (python -m venv venv), ative e instale os requisitos.
+4. Rode com "python manage.py runserver".
+
+Passo 4: Acesso Externo
+Use o Cloudflare Tunnel conforme explicado anteriormente.

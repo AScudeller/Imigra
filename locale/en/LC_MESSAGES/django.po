@@ -1,0 +1,75 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: G IMIGRA\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-08 18:00+0000\n"
+"PO-Revision-Date: 2026-02-08 18:00+0000\n"
+"Last-Translator: Antigravity\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Acesso ao Cliente"
+msgstr "Client Access"
+
+msgid "Portal do Cliente"
+msgstr "Client Portal"
+
+msgid "E-mail Cadastrado"
+msgstr "Registered E-mail"
+
+msgid "Número do Passaporte"
+msgstr "Passport Number"
+
+msgid "Seu passaporte"
+msgstr "Your passport"
+
+msgid "Entrar no Portal"
+msgstr "Login to Portal"
+
+msgid "Bem-vindo"
+msgstr "Welcome"
+
+msgid "Acompanhe seu processo imigratório em tempo real."
+msgstr "Track your immigration process in real time."
+
+msgid "Caso"
+msgstr "Case"
+
+msgid "Checklist de Progresso"
+msgstr "Progress Checklist"
+
+msgid "Enviar"
+msgstr "Send"
+
+msgid "Enviar Documento"
+msgstr "Upload Document"
+
+msgid "Etapa Selecionada"
+msgstr "Selected Step"
+
+msgid "Nome do Documento (Ex: Passaporte)"
+msgstr "Document Name (e.g. Passport)"
+
+msgid "Arquivo"
+msgstr "File"
+
+msgid "Finalizar Upload"
+msgstr "Finish Upload"
+
+msgid "Financeiro"
+msgstr "Financial"
+
+msgid "Fatura"
+msgstr "Invoice"
+
+msgid "Precisa de Ajuda?"
+msgstr "Need Help?"
+
+msgid "Entre em contato direto com seu consultor via WhatsApp."
+msgstr "Contact your consultant directly via WhatsApp."
+
+msgid "Falar com Consultor"
+msgstr "Contact Consultant"

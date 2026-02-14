@@ -1,0 +1,300 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<style>
+    .contract-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+
+    .contract-card {
+        background: white;
+        border: 2px solid #e3e6f0;
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .contract-card:hover {
+        border-color: #4e73df;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .contract-card.has-contract {
+        border-color: #28a745;
+        background: #f8fff9;
+    }
+
+    .contract-card.no-contract {
+        border-color: #ffc107;
+        background: #fffef8;
+    }
+
+    .contract-status {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .status-ok {
+        background: #28a745;
+        color: white;
+    }
+
+    .status-missing {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .editor-container {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 400px;
+    }
+
+    .variables-help {
+        background: #f8f9fc;
+        border-left: 4px solid #4e73df;
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .variable-tag {
+        background: #e7f3ff;
+        color: #004085;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 0 4px;
+    }
+
+    #editor {
+        min-height: 400px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-file-contract"></i> Gerenciador de Contratos por Tipo de Visto</h1>
+        <a href="/admin/gestao/modelocontrato/add/" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Contrato Genérico
+        </a>
+    </div>
+
+    <div class="variables-help">
+        <h5><i class="fas fa-info-circle"></i> Variáveis Disponíveis</h5>
+        <p>Use estas variáveis no texto do contrato. Elas serão substituídas automaticamente:</p>
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Dados do Cliente:</strong><br>
+                <span class="variable-tag">{{cliente_nome}}</span>
+                <span class="variable-tag">{{passaporte}}</span>
+                <span class="variable-tag">{{email}}</span>
+                <span class="variable-tag">{{telefone}}</span>
+                <span class="variable-tag">{{nacionalidade}}</span>
+                <span class="variable-tag">{{endereco_eua}}</span>
+            </div>
+            <div class="col-md-6">
+                <strong>Dados do Processo:</strong><br>
+                <span class="variable-tag">{{tipo_visto}}</span>
+                <span class="variable-tag">{{data_hoje}}</span>
+                <br><br>
+                <strong>Dados Financeiros (do Orçamento):</strong><br>
+                <span class="variable-tag">{{valor_total}}</span>
+                <span class="variable-tag">{{valor_entrada}}</span>
+                <span class="variable-tag">{{num_parcelas}}</span>
+                <span class="variable-tag">{{frequencia_parcelas}}</span>
+            </div>
+        </div>
+        <div class="alert alert-warning mt-3">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Importante:</strong> O contrato só poderá ser gerado se
+            o processo tiver um <strong>orçamento vinculado e aprovado (status ACEITO)</strong>.
+        </div>
+    </div>
+
+    <div class="contract-grid">
+        {% for visto in tipos_visto %}
+        <div class="contract-card {% if visto.contrato %}has-contract{% else %}no-contract{% endif %}"
+            onclick="editarContrato('{{ visto.id }}', '{{ visto.codigo }}')">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h4 class="mb-1">{{ visto.codigo }}</h4>
+                    <p class="text-muted mb-0">{{ visto.nome }}</p>
+                </div>
+                <span class="contract-status {% if visto.contrato %}status-ok{% else %}status-missing{% endif %}">
+                    {% if visto.contrato %}
+                    <i class="fas fa-check"></i> Configurado
+                    {% else %}
+                    <i class="fas fa-exclamation"></i> Pendente
+                    {% endif %}
+                </span>
+            </div>
+
+            {% if visto.contrato %}
+            <div class="small text-muted">
+                <i class="fas fa-file-alt"></i> {{ visto.contrato.nome }}<br>
+                <i class="fas fa-clock"></i> Atualizado: {{ visto.contrato.criado_em|date:"d/m/Y H:i" }}
+            </div>
+            {% else %}
+            <div class="small text-warning">
+                <i class="fas fa-exclamation-triangle"></i> Nenhum contrato configurado
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="editorModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i> Editar Contrato: <span id="modal-visto-nome"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" id="contract-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="tipo_visto_id" id="tipo_visto_id">
+                    <input type="hidden" name="contrato_id" id="contrato_id">
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nome do Modelo</label>
+                            <input type="text" name="nome" id="nome_modelo" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Conteúdo do Contrato</label>
+                            <div id="editor"></div>
+                            <textarea name="conteudo" id="conteudo_hidden" style="display:none;"></textarea>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="ativo" id="ativo" checked>
+                            <label class="form-check-label" for="ativo">
+                                Contrato Ativo
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-info" onclick="previsualizar()">
+                            <i class="fas fa-eye"></i> Pré-visualizar
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Salvar Contrato
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let quill;
+    const editorModal = new bootstrap.Modal(document.getElementById('editorModal'));
+
+    // Inicializar Quill Editor
+    document.addEventListener('DOMContentLoaded', function () {
+        quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['clean']
+                ]
+            }
+        });
+    });
+
+    function editarContrato(vistoId, vistoNome) {
+        document.getElementById('modal-visto-nome').textContent = vistoNome;
+        document.getElementById('tipo_visto_id').value = vistoId;
+
+        // Carregar dados via AJAX
+        fetch(`/admin/gestao/contratos/api/get-contrato/?visto_id=${vistoId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists) {
+                    document.getElementById('contrato_id').value = data.id;
+                    document.getElementById('nome_modelo').value = data.nome;
+                    quill.root.innerHTML = data.conteudo;
+                    document.getElementById('ativo').checked = data.ativo;
+                } else {
+                    // Novo contrato
+                    document.getElementById('contrato_id').value = '';
+                    document.getElementById('nome_modelo').value = `Contrato ${vistoNome}`;
+                    quill.root.innerHTML = '<p>Digite o conteúdo do contrato aqui...</p>';
+                    document.getElementById('ativo').checked = true;
+                }
+                editorModal.show();
+            });
+    }
+
+    document.getElementById('contract-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Transferir conteúdo do Quill para textarea hidden
+        document.getElementById('conteudo_hidden').value = quill.root.innerHTML;
+
+        const formData = new FormData(this);
+
+        fetch('/admin/gestao/contratos/api/salvar/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Contrato salvo com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao salvar: ' + data.error);
+                }
+            });
+    });
+
+    function previsualizar() {
+        const conteudo = quill.root.innerHTML;
+        const preview = window.open('', 'Preview', 'width=800,height=600');
+        preview.document.write(`
+            <html>
+            <head>
+                <title>Pré-visualização do Contrato</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
+                    h1, h2, h3 { color: #333; }
+                </style>
+            </head>
+            <body>${conteudo}</body>
+            </html>
+        `);
+    }
+</script>
+{% endblock %}

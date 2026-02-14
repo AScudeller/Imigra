@@ -1,0 +1,110 @@
+{% extends "gestao/base.html" %}
+
+{% block title %}Backup do Sistema{% endblock %}
+{% block page_title %}Backup do Sistema{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-database me-2"></i> Gerenciamento de Backups
+                    </h6>
+                </div>
+                <div class="card-body text-center py-5">
+                    <p class="text-muted mb-5">Selecione o tipo de backup que deseja realizar. O arquivo será gerado e
+                        baixado automaticamente.</p>
+
+                    <div class="row g-4 justify-content-center">
+                        <!-- Backup de Dados -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-primary shadow-sm hover-shadow transition-all">
+                                <div class="card-body">
+                                    <div class="mb-4">
+                                        <i class="fas fa-table fa-3x text-primary"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Somente Dados</h5>
+                                    <p class="card-text text-muted small">Baixa apenas o banco de dados (.sql). Ideal
+                                        para backups rápidos e migração de dados.</p>
+                                    <form method="post" action="{% url 'executar_backup' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="tipo" value="dados">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-download me-2"></i> Gerar SQL
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Backup de Fontes -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-success shadow-sm hover-shadow transition-all">
+                                <div class="card-body">
+                                    <div class="mb-4">
+                                        <i class="fas fa-code fa-3x text-success"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Somente Fontes</h5>
+                                    <p class="card-text text-muted small">Zipa todo o código fonte do sistema (arquivos
+                                        .py, .html, .css). Exclui venv e arquivos temporários.</p>
+                                    <form method="post" action="{% url 'executar_backup' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="tipo" value="fontes">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="fas fa-file-archive me-2"></i> Gerar ZIP
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Backup Total -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-warning shadow-sm hover-shadow transition-all"
+                                style="background-color: #fffaf0;">
+                                <div class="card-body">
+                                    <div class="mb-4">
+                                        <i class="fas fa-box-open fa-3x text-warning"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Backup Total</h5>
+                                    <p class="card-text text-muted small">Cópia completa: Banco de Dados + Código Fonte
+                                        + Arquivos de Mídia. Tudo em um único arquivo ZIP.</p>
+                                    <form method="post" action="{% url 'executar_backup' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="tipo" value="total">
+                                        <button type="submit" class="btn btn-warning w-100">
+                                            <i class="fas fa-shield-alt me-2"></i> Gerar Backup Completo
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 alert alert-warning d-inline-block text-start">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i> Recomendações:</h6>
+                        <ul class="mb-0 small">
+                            <li>Realize o backup total pelo menos uma vez por semana.</li>
+                            <li>Sempre baixe o backup de dados antes de fazer alterações estruturais.</li>
+                            <li>Arquive os backups em um HD externo ou serviço de nuvem seguro.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
+    }
+</style>
+{% endblock %}
