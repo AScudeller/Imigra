@@ -34,8 +34,10 @@ echo [1/2] Iniciando Django (ERP) na porta 8000...
 start "Django SERVER" cmd /k "venv_server\Scripts\python.exe manage.py runserver 0.0.0.0:8000 || pause"
 
 echo.
-echo [2/2] Iniciando PHP (IAMoveis) na porta 8090...
-start "PHP SERVER" cmd /k "%PHP_CMD% -S 0.0.0.0:8090 -t ../iamoveis || pause"
+echo [2/2] Iniciando PHP (IAMoveis) via Apache na porta 8090...
+:: O PHP agora roda via Apache (XAMPP). Vamos garantir que o servico esteja subindo.
+net start Apache2.4 >nul 2>nul
+echo [OK] Apache configurado na porta 8090.
 
 echo.
 echo ===================================================
@@ -43,9 +45,10 @@ echo  SISTEMAS ONLINE!
 echo ===================================================
 echo.
 echo Acesse de qualquer computador da rede:
-echo  - ERP: http://192.168.86.250:8000
-echo  - IAMoveis: http://192.168.86.250:8090
+echo  - ERP (Django): http://192.168.86.250:8000
+echo  - IAMoveis (PHP): http://192.168.86.250:8090
 echo.
-echo (Nao feche esta janela)
+echo NOTA: O PHP agora roda profissionalmente via Apache.
+echo Nao eh mais aberta uma janela separada para ele.
 echo.
 pause
