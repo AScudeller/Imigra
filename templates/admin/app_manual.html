@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Avançado - G IMIGRA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #004085;
+            --secondary: #e67e22;
+            --text: #2c3e50;
+            --bg-light: #f4f6f9;
+            --white: #ffffff;
+            --success: #27ae60;
+            --info: #2980b9;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text);
+            line-height: 1.7;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR DE NAVEGAÇÃO */
+        aside {
+            width: 280px;
+            background: linear-gradient(180deg, #1a252f 0%, #2c3e50 100%);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            padding: 30px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .brand h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+
+        .brand span {
+            color: var(--secondary);
+            font-weight: 800;
+        }
+
+        .search-container {
+            padding: 20px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        nav li a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #bdc3c7;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        nav li a:hover,
+        nav li a.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left-color: var(--secondary);
+        }
+
+        nav li a i {
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        /* CONTEÚDO PRINCIPAL */
+        main {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .manual-section {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+            border-top: 5px solid var(--secondary);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--info);
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        h2 i {
+            margin-right: 10px;
+            opacity: 0.7;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: #555;
+            margin-top: 25px;
+            border-left: 4px solid #ddd;
+            padding-left: 10px;
+        }
+
+        /* CURIOSIDADES VISUAIS (BOXES) */
+        .step-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: var(--info);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .ui-mockup {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .ui-mockup .btn {
+            background: var(--secondary);
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 0.8rem;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        /* TABELAS */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        table td {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+        }
+
+        table tr:hover {
+            background: #f1f1f1;
+        }
+
+        /* ALERTAS */
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .alert i {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            margin-top: 3px;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #0c5460;
+            border-left: 5px solid #17a2b8;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+
+        .btn-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary);
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+
+        .btn-top:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside>
+        <div class="brand">
+            <h2>G <span>IMIGRA</span></h2>
+            <small>Guia Oficial v2.0</small>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="search" placeholder="🔎 Pesquisar..." onkeyup="filterDocs()">
+        </div>
+
+        <nav>
+            <ul id="nav-list">
+                <li><a href="#intro" class="active"><i class="fas fa-home"></i> Início</a></li>
+                <li><a href="#dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+                <li><a href="#clientes"><i class="fas fa-users"></i> Gestão de Clientes</a></li>
+                <li><a href="#financeiro"><i class="fas fa-file-invoice-dollar"></i> Financeiro (Invoices)</a></li>
+                <li><a href="#processos"><i class="fas fa-passport"></i> Processos & Vistos</a></li>
+                <li><a href="#relatorios"><i class="fas fa-print"></i> Relatórios</a></li>
+                <li><a href="#admin"><i class="fas fa-cogs"></i> Admin & Segurança</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main>
+
+        <!-- SEÇÃO INTRODUÇÃO -->
+        <section id="intro" class="manual-section">
+            <h1>Bem-vindo ao Manual Avançado G IMIGRA</h1>
+            <p>Este documento foi desenhado para ser o guia definitivo de operação do sistema. Aqui você não encontrará
+                apenas "onde clicar", mas sim <strong>como gerir seu escritório imigratório</strong> utilizando a
+                ferramenta.</p>
+
+            <div class="alert alert-info">
+                <i class="fas fa-lightbulb"></i>
+                <div>
+                    <strong>Dica de Ouro:</strong> O sistema salva tudo automaticamente ao clicar nos botões "Salvar".
+                    Nunca feche a janela sem ver a mensagem verde de confirmação no topo da tela.
+                </div>
+            </div>
+
+            <h3>Glossário Rápido (Termos do Sistema)</h3>
+            <table>
+                <tr>
+                    <th>Termo</th>
+                    <th>Significado no Sistema</th>
+                </tr>
+                <tr>
+                    <td><strong>Lead</strong></td>
+                    <td>Um potencial cliente que entrou em contato mas ainda não pagou/assinou contrato.</td>
+                </tr>
+                <tr>
+                    <td><strong>Invoice (Fatura)</strong></td>
+                    <td>O documento oficial de cobrança enviado ao cliente. Gera saldo a receber.</td>
+                </tr>
+                <tr>
+                    <td><strong>Aging</strong></td>
+                    <td>Relatório de "Envelhecimento" de dívidas. Mostra quem deve há 30, 60 ou 90 dias.</td>
+                </tr>
+                <tr>
+                    <td><strong>CardCode</strong></td>
+                    <td>Código único do cliente (automático). Usado para integrações futuras com SAP.</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- MÓDULO DASHBOARD -->
+        <section id="dashboard" class="manual-section">
+            <h1><i class="fas fa-chart-pie"></i> O Dashboard (Painel de Controle)</h1>
+            <p>Assim que você faz login, esta é a tela que define seu dia. Ela é dividida em 3 áreas estratégicas:</p>
+
+            <div class="step-box">
+                <span class="step-number">1</span> <strong>KPIs Financeiros (Topo)</strong>
+                <p>Quatro cartões coloridos que mostram a saúde do negócio em tempo real.</p>
+                <ul>
+                    <li><span style="color:#2ecc71">VERDE:</span> Dinheiro que já está na conta (Baixado).</li>
+                    <li><span style="color:#e74c3c">VERMELHO:</span> Dinheiro atrasado (Boletos vencidos). Ação imediata
+                        necessária!</li>
+                </ul>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">2</span> <strong>Alertas de Prazos (Centro)</strong>
+                <p>O sistema "grita" quando algo vai vencer nos próximos <strong>5 dias</strong>.</p>
+                <div class="ui-mockup">
+                    ⚠️ ALERTA: Passaporte do Cliente João Silva expira em 3 dias.<br>
+                    ⚠️ ALERTA: Parcela $500.00 da Maria Souza vence amanhã.
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO CLIENTES -->
+        <section id="clientes" class="manual-section">
+            <h1><i class="fas fa-users"></i> Gestão de Clientes</h1>
+            <p>Aqui começa todo o trabalho. Sem cliente, não há processo nem fatura.</p>
+
+            <h2>Passo a Passo: Cadastrando uma Família</h2>
+
+            <div class="step-box">
+                <h3>Passo 1: Iniciar Cadastro</h3>
+                <p>No menu lateral, clique em <strong>Clientes</strong> e depois no botão azul <strong>ADICIONAR CLIENTE
+                        +</strong>.</p>
+            </div>
+
+            <div class="step-box">
+                <h3>Passo 2: Dados Principais</h3>
+                <p>Preencha com atenção. O campo <strong>Email</strong> é crucial pois é para onde as Invoices serão
+                    enviadas.</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Atenção:</strong> Se for uma empresa (Pessoa Jurídica), marque a caixinha "É Empresa?". Isso
+                    muda o CPF para EIN/CNPJ.
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h3>Passo 3: Dependentes</h3>
+                <p>Não crie cadastros separados para filhos! Dentro do cadastro do Pai/Mãe, vá na aba "Dependentes" e
+                    adicione Esposa(o) e Filhos. Assim, a fatura sai única para a família.</p>
+            </div>
+        </section>
+
+        <!-- MÓDULO FINANCEIRO -->
+        <section id="financeiro" class="manual-section">
+            <h1><i class="fas fa-file-invoice-dollar"></i> Financeiro Profissional</h1>
+            <p>Como cobrar e receber dinheiro usando o G IMIGRA.</p>
+
+            <h2>Fluxo Completo: Da Cobrança ao Recibo</h2>
+
+            <h3>1. Criando a Fatura (Invoice)</h3>
+            <ol>
+                <li>Vá em <strong>Faturas</strong> > <strong>Adicionar Fatura</strong>.</li>
+                <li>Selecione o Cliente (digite o nome para buscar).</li>
+                <li>Clique em "Adicionar Linha" para inserir serviços (Ex: Visto EB-2, Taxa Imigratória).</li>
+                <li>Defina o valor e a data de vencimento.</li>
+                <li><strong>SALVAR!</strong></li>
+            </ol>
+            <div class="ui-mockup">
+                O sistema gerou a Fatura #1023. <br>
+                [BOTÃO] Gerar PDF (Imprimir)
+            </div>
+
+            <h3>2. Baixando o Pagamento (Quando o cliente paga)</h3>
+            <p>O cliente depositou? Você precisa avisar o sistema.</p>
+            <ol>
+                <li>Vá na tela de <strong>Pagamentos</strong>.</li>
+                <li>Busque o nome do cliente.</li>
+                <li>Selecione a fatura em aberto.</li>
+                <li>Digite o valor pago (pode ser parcial!).</li>
+                <li>Clique em <strong>Confirmar Recebimento</strong>.</li>
+            </ol>
+            <p><em>Resultado: O saldo do cliente é atualizado e o gráfico do Dashboard sobe!</em></p>
+        </section>
+
+        <!-- RELATÓRIOS -->
+        <section id="relatorios" class="manual-section">
+            <h1><i class="fas fa-print"></i> Relatórios Gerenciais</h1>
+
+            <h2>Relatório de Inadimplência (Aging)</h2>
+            <p>Este é o relatório favorito do financeiro. Ele mostra <strong>há quantos dias</strong> o cliente deve.
+            </p>
+
+            <table class="table table-bordered">
+                <tr>
+                    <th>Faixa</th>
+                    <th>Significado</th>
+                    <th>Ação Recomendada</th>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">0-30 dias</span></td>
+                    <td>Dívida recente.</td>
+                    <td>Enviar lembrete amigável.</td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-warning">31-60 dias</span></td>
+                    <td>Atraso preocupante.</td>
+                    <td>Ligar para o cliente.</td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-danger">> 90 dias</span></td>
+                    <td>Risco de Calote.</td>
+                    <td>Suspender o processo imigratório.</td>
+                </tr>
+            </table>
+        </section>
+
+    </main>
+
+    <a href="#" class="btn-top"><i class="fas fa-arrow-up"></i></a>
+
+    <script>
+        // Script de Busca em Tempo Real
+        function filterDocs() {
+            let input = document.getElementById('search').value.toLowerCase();
+            let sections = document.querySelectorAll('.manual-section');
+            let navLinks = document.querySelectorAll('#nav-list li');
+
+            sections.forEach(section => {
+                let text = section.innerText.toLowerCase();
+                if (text.includes(input)) {
+                    section.style.display = "block";
+                } else {
+                    section.style.display = "none";
+                }
+            });
+
+            // Se o input estiver vazio, mostra tudo
+            if (input === "") {
+                sections.forEach(s => s.style.display = "block");
+            }
+        }
+    </script>
+</body>
+
+</html>

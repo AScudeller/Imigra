@@ -1,0 +1,73 @@
+{% extends "admin/base.html" %}
+
+{% block title %}G IMIGRA | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div id="branding-container"
+    style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 20px;">
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}"
+            style="text-decoration: none; color: white; display: flex; align-items: center;">
+            <i class="fas fa-globe-americas" style="margin-right: 10px;"></i>
+            G IMIGRA
+        </a>
+    </h1>
+
+    <div style="display: flex; gap: 10px;">
+        <!-- Atalho Manual -->
+        <a href="/manual-usuario/" target="_blank" class="header-link"
+            style="background: #34495e; color: white; padding: 6px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; display: flex; align-items: center; transition: background 0.3s ease;">
+            <i class="fas fa-book" style="margin-right: 8px;"></i>
+            MANUAL
+        </a>
+
+        <!-- Atalho Dashboard -->
+        <a href="/" class="header-link"
+            style="background: #e67e22; color: white; padding: 6px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; display: flex; align-items: center; transition: background 0.3s ease;">
+            <i class="fas fa-chart-line" style="margin-right: 8px;"></i>
+            DASHBOARD
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Estilo do Header Principal */
+    #header {
+        background: #2c3e50 !important;
+        border-bottom: 3px solid #e67e22;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    #branding h1 {
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    /* Melhora os breadcrumbs */
+    div.breadcrumbs {
+        background: #f8f9fc !important;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 10px 40px;
+        font-size: 13px;
+    }
+
+    /* Efeito Hover no botão */
+    a.header-link:hover {
+        background: #cf711f !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Remove o link padrão 'View Site' se ele estiver duplicado */
+    .user-tools a[href="/"] {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.shortcuts import render
 from django.urls import path, include
 from gestao.views import (dashboard, cliente_portal, cliente_login, baixa_pagamento_view, 
                           api_parcelas_cliente, relatorio_inadimplencia_view,
@@ -22,6 +23,11 @@ from gestao.views import (dashboard, cliente_portal, cliente_login, baixa_pagame
                           estornar_fatura_view)
 from gestao.reports import gerar_invoice_pdf, gerar_contrato_pdf
 from gestao.reports_orcamento import gerar_orcamento_pdf
+
+# Personalização do Admin
+admin.site.site_header = "G IMIGRA - Gestão Imigratória"
+admin.site.site_title = "G IMIGRA Portal"
+admin.site.index_title = "Painel Administrativo"
 
 urlpatterns = [
     path('admin/gestao/pagamento/novo-recebimento/', baixa_pagamento_view, name='baixa_pagamento'),
@@ -39,4 +45,5 @@ urlpatterns = [
     path('processo/contrato/<int:processo_id>/', gerar_contrato_pdf, name='gerar_contrato_pdf'),
     path('orcamento/pdf/<int:orcamento_id>/', gerar_orcamento_pdf, name='gerar_orcamento_pdf'),
     path('i18n/', include('django.conf.urls.i18n')),
+    path('manual-usuario/', lambda request: render(request, 'admin/app_manual.html'), name='manual_usuario'),
 ]
