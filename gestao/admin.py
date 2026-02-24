@@ -212,10 +212,18 @@ class OrcamentoAdmin(SimpleHistoryAdmin):
     
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        self.gerar_parcelas_orcamento(obj)
+        # Só gera parcelas automaticamente na CRIAÇÃO do orçamento
+        # Na edição (change=True), preserva as parcelas que o usuário editou manualmente
+        if not change:
+            # Novo orçamento: gera o plano de pagamento automaticamente
+            self.gerar_parcelas_orcamento(obj)
+        else:
+            # Edição: só gera se não existir nenhuma parcela ainda
+            if obj.parcelas_preview.count() == 0:
+                self.gerar_parcelas_orcamento(obj)
 
     def gerar_parcelas_orcamento(self, orc):
-        """Gera parcelas preview (lógica simplificada da anterior)"""
+        """Gera parcelas preview - chamado apenas na criação ou ação manual"""
         if orc.valor_total <= 0: return
         from django.utils import timezone
         from decimal import Decimal
@@ -236,10 +244,11 @@ class OrcamentoAdmin(SimpleHistoryAdmin):
                 OrcamentoParcela.objects.create(orcamento=orc, num_parcela=i+1, valor=valor_parcela, data_vencimento=data_atual + timedelta(days=days*i))
 
     def acao_gerar_plano(self, request, queryset):
+        """Ação manual para FORÇAR a regeração do plano de pagamento"""
         for orc in queryset:
             if orc.status != 'ACEITO': self.gerar_parcelas_orcamento(orc)
         self.message_user(request, "Plano de pagamento atualizado.")
-    acao_gerar_plano.short_description = "Regerar Plano"
+    acao_gerar_plano.short_description = "Regerar Plano (apaga e recria as parcelas)"
 
     def imprimir_orcamento(self, obj):
         url = reverse('gerar_orcamento_pdf', args=[obj.id])
