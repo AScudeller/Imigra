@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.shortcuts import render
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from gestao.views import (dashboard, cliente_portal, cliente_login, baixa_pagamento_view, 
                           api_parcelas_cliente, relatorio_inadimplencia_view,
                           editor_contrato_unico_view, backup_sistema_view, executar_backup_view,
@@ -49,3 +51,6 @@ urlpatterns = [
     path('manual-usuario/', lambda request: render(request, 'admin/app_manual.html'), name='manual_usuario'),
     path('debug-clear-sessions/', debug_clear_sessions, name='debug_clear_sessions'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

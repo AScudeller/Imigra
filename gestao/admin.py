@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Cliente, Processo, Documento, Fatura, Parcela, Pagamento, AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, EtapaProcesso, Lead, Despesa, LogNotificacao, Orcamento, OrcamentoParcela
+from .models import (Cliente, Processo, Documento, Fatura, Parcela, Pagamento, 
+                     AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, 
+                     EtapaProcesso, Lead, Despesa, LogNotificacao, Orcamento, 
+                     OrcamentoParcela, AnexoCliente)
 from simple_history.admin import SimpleHistoryAdmin
 from django.utils.html import format_html
 from django.urls import reverse
@@ -56,15 +59,97 @@ class AlocacaoInline(admin.TabularInline):
     readonly_fields = ('parcela', 'valor_alocado')
     can_delete = False
 
+class AnexoClienteInline(admin.TabularInline):
+    model = AnexoCliente
+    extra = 1
+    fields = ('miniatura_preview', 'titulo', 'categoria', 'arquivo', 'observacoes', 'data_upload', 'acoes')
+    readonly_fields = ('miniatura_preview', 'data_upload', 'acoes')
+    verbose_name = "Anexo / Foto do Cliente"
+    verbose_name_plural = "📂 Anexos, Fotos e Documentos do Cliente"
+
+    def miniatura_preview(self, obj):
+        if not obj or not obj.arquivo:
+            return format_html('<span style="color: #999;">Sem arquivo</span>')
+        
+        if obj.is_image:
+            return format_html(
+                '<a href="{}" target="_blank" title="Clique para ampliar">'
+                '<img src="{}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; box-shadow: 0 1px 3px rgba(0,0,0,0.15);" />'
+                '</a>',
+                obj.arquivo.url, obj.arquivo.url
+            )
+        elif obj.extensao == '.pdf':
+            return format_html(
+                '<a href="{}" target="_blank" title="Abrir PDF" style="font-size: 26px; text-decoration: none;">📄</a>',
+                obj.arquivo.url
+            )
+        else:
+            return format_html(
+                '<a href="{}" target="_blank" title="Abrir Arquivo" style="font-size: 26px; text-decoration: none;">📁</a>',
+                obj.arquivo.url
+            )
+    miniatura_preview.short_description = "Visualização"
+
+    def acoes(self, obj):
+        if not obj or not obj.arquivo:
+            return "-"
+        return format_html(
+            '<a class="button" href="{}" target="_blank" style="margin-right: 5px; background: #007bff; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; text-decoration: none;">👁️ Ver</a>'
+            '<a class="button" href="{}" download style="background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; text-decoration: none;">⬇️ Baixar ({})</a>',
+            obj.arquivo.url, obj.arquivo.url, obj.tamanho_formatado
+        )
+    acoes.short_description = "Ações"
+
 # --- CADASTROS PRINCIPAIS ---
+
+@admin.register(AnexoCliente)
+class AnexoClienteAdmin(SimpleHistoryAdmin):
+    list_display = ('miniatura_preview', 'titulo', 'cliente', 'categoria', 'extensao_fmt', 'tamanho_formatado', 'data_upload', 'acoes')
+    list_filter = ('categoria', 'data_upload')
+    search_fields = ('titulo', 'cliente__nome', 'cliente__card_code', 'observacoes')
+    readonly_fields = ('miniatura_preview', 'data_upload', 'acoes')
+
+    def miniatura_preview(self, obj):
+        if not obj or not obj.arquivo:
+            return "-"
+        if obj.is_image:
+            return format_html(
+                '<a href="{}" target="_blank">'
+                '<img src="{}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px;" />'
+                '</a>',
+                obj.arquivo.url, obj.arquivo.url
+            )
+        return format_html('<span>{}</span>', obj.extensao.upper() or 'ARQUIVO')
+    miniatura_preview.short_description = "Preview"
+
+    def extensao_fmt(self, obj):
+        return obj.extensao.upper() or "-"
+    extensao_fmt.short_description = "Formato"
+
+    def acoes(self, obj):
+        if not obj or not obj.arquivo:
+            return "-"
+        return format_html(
+            '<a class="button" href="{}" target="_blank" style="margin-right: 5px; background: #007bff; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; text-decoration: none;">👁️ Ver</a>'
+            '<a class="button" href="{}" download style="background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; text-decoration: none;">⬇️ Baixar</a>',
+            obj.arquivo.url, obj.arquivo.url
+        )
+    acoes.short_description = "Ações"
 
 @admin.register(Cliente)
 class ClienteAdmin(SimpleHistoryAdmin):
-    list_display = ('card_code', 'nome', 'email', 'telefone', 'saldo_atual_fmt')
+    list_display = ('card_code', 'nome', 'email', 'telefone', 'total_anexos_fmt', 'saldo_atual_fmt')
     search_fields = ('card_code', 'nome', 'email', 'passaporte', 'endereco_eua')
     list_filter = ('nacionalidade',)
     readonly_fields = ('card_code', 'saldo_atual')
-    inlines = [FaturaClienteInline, PagamentoClienteInline] # Painel Financeiro Integrado
+    inlines = [AnexoClienteInline, FaturaClienteInline, PagamentoClienteInline] # Painel de Anexos + Financeiro Integrado
+
+    def total_anexos_fmt(self, obj):
+        total = obj.anexos.count()
+        if total > 0:
+            return format_html('<span style="background: #e7f3fe; color: #0066cc; padding: 2px 8px; border-radius: 12px; font-weight: bold;">📁 {} anexo(s)</span>', total)
+        return format_html('<span style="color: #999;">0</span>')
+    total_anexos_fmt.short_description = "Anexos / Fotos"
 
     class Media:
         js = ('js/admin_masks.js',)

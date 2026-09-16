@@ -1,4 +1,5 @@
 from django.db import models
+import os
 from .models_contracts import ModeloContrato
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
@@ -105,6 +106,57 @@ class Cliente(models.Model):
         verbose_name = _("Cliente")
         verbose_name_plural = _("Clientes")
         ordering = ['nome']
+
+class AnexoCliente(models.Model):
+    CATEGORIAS = [
+        ('FOTO', 'Foto / Imagem'),
+        ('PASSAPORTE', 'Passaporte / Documento de Identidade'),
+        ('COMPROVANTE', 'Comprovante de Residência'),
+        ('CERTIDAO', 'Certidão (Nascimento, Casamento, etc.)'),
+        ('FINANCEIRO', 'Comprovante Financeiro / Extrato'),
+        ('FORMULARIO', 'Formulários / Petições Assinadas'),
+        ('DOCUMENTO', 'Outros Documentos / Arquivos'),
+    ]
+
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='anexos', verbose_name=_("Cliente"))
+    titulo = models.CharField(_("Título / Descrição"), max_length=255)
+    categoria = models.CharField(_("Tipo / Categoria"), max_length=50, choices=CATEGORIAS, default='DOCUMENTO')
+    arquivo = models.FileField(_("Arquivo / Foto"), upload_to='clientes/anexos/%Y/%m/')
+    observacoes = models.TextField(_("Observações"), blank=True)
+    data_upload = models.DateTimeField(_("Data do Upload"), auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = _("Anexo do Cliente")
+        verbose_name_plural = _("Anexos do Cliente")
+        ordering = ['-data_upload']
+
+    def __str__(self):
+        return f"{self.titulo} - {self.cliente.nome}"
+
+    @property
+    def extensao(self):
+        if self.arquivo and hasattr(self.arquivo, 'name') and self.arquivo.name:
+            _, ext = os.path.splitext(self.arquivo.name)
+            return ext.lower()
+        return ""
+
+    @property
+    def is_image(self):
+        return self.extensao in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+
+    @property
+    def tamanho_formatado(self):
+        try:
+            bytes_size = self.arquivo.size
+            if bytes_size < 1024:
+                return f"{bytes_size} B"
+            elif bytes_size < 1024 * 1024:
+                return f"{bytes_size / 1024:.1f} KB"
+            else:
+                return f"{bytes_size / (1024 * 1024):.2f} MB"
+        except Exception:
+            return "-"
 
 # --- GESTÃO DE CASOS (Case Management) ---
 
