@@ -146,9 +146,16 @@ class ClienteAdmin(SimpleHistoryAdmin):
 
     def total_anexos_fmt(self, obj):
         total = obj.anexos.count()
+        url = reverse('admin:gestao_cliente_change', args=[obj.id])
         if total > 0:
-            return format_html('<span style="background: #e7f3fe; color: #0066cc; padding: 2px 8px; border-radius: 12px; font-weight: bold;">📁 {} anexo(s)</span>', total)
-        return format_html('<span style="color: #999;">0</span>')
+            return format_html(
+                '<a href="{}" style="background: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 11px; text-decoration: none;" title="Ver ou adicionar anexos">📁 {} anexo(s)</a>',
+                url, total
+            )
+        return format_html(
+            '<a href="{}" style="background: #e9ecef; color: #495057; padding: 3px 10px; border-radius: 12px; font-size: 11px; text-decoration: none; border: 1px solid #ced4da;" title="Adicionar anexo">+ Anexar</a>',
+            url
+        )
     total_anexos_fmt.short_description = "Anexos / Fotos"
 
     class Media:
