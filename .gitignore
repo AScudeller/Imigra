@@ -40,3 +40,8 @@ storage/uploads/*
 storage/temp/*
 !storage/uploads/.gitkeep
 !storage/temp/.gitkeep
+
+# Database dumps
+backup_*.sql
+*.sql.gz
+

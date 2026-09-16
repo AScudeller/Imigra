@@ -16,6 +16,23 @@ echo   Porta: %PORTA%
 echo ============================================================
 echo.
 
+:: Verifica se esta rodando como Administrador
+net session >nul 2>&1
+if %errorLevel% NEQ 0 (
+    color 0C
+    echo [ERRO] Este script precisa ser executado como ADMINISTRADOR!
+    echo.
+    echo  1. Feche esta janela
+    echo  2. Clique com botao direito neste arquivo .bat
+    echo  3. Escolha "Executar como administrador"
+    echo.
+    pause
+    exit /b 1
+)
+
+echo [OK] Rodando como Administrador
+echo.
+
 :: =============================================================
 :: PASSO 1 - Configurar perfil de rede como Privado
 :: =============================================================
