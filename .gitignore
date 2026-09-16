@@ -1,31 +1,42 @@
-# Django
-*.log
-*.pot
-*.pyc
-__pycache__/
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media/
-staticfiles/
-
 # Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
 venv/
 venv_dev/
 venv_server/
-ENV/
-env/
+scratch_*.py
+
+# Django
+*.log
+db.sqlite3
+/static/
+/media/
+
+# Environment
 .env
+.env.*
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
 
-# IDEs
-.vscode/
-.idea/
+# Logs
+logs/*.log
 
-# G IMIGRA specific
-*.pdf
-documentos/processos/
-comprovantes/despesas/
+# Storage
+storage/uploads/*
+storage/temp/*
+!storage/uploads/.gitkeep
+!storage/temp/.gitkeep

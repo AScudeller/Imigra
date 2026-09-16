@@ -1,60 +1,114 @@
-# G IMIGRA 🚀 - Immigration ERP & Case Management
+# 🏗️ ERP MOVEIS - WORKSPACE PYTHON (SERVIDOR)
 
-O **G IMIGRA** é um sistema completo de gestão para escritórios de imigração, projetado com a robustez e arquitetura de um ERP profissional (inspirado em padrões SAP B1). O sistema integra o fluxo operacional de vistos americanos com um motor financeiro potente e um CRM estratégico.
+## ✅ Workspace Isolado Criado com Sucesso!
 
-## 🌟 Principais Funcionalidades
+Este workspace foi criado **no servidor** (192.168.86.250) em:
+```
+\\servidor\Sistemas\ERP_PYTHON\
+```
 
-### 📋 Operacional e Workflows
-- **Checklist Automatizado:** Cada tipo de visto (EB-2, O-1, L-1, etc.) possui seu próprio template de etapas. Ao criar um processo, o roteiro de tarefas é gerado automaticamente.
-- **Gestão de Processos:** Acompanhamento de status desde a Triagem até o Protocolo no USCIS.
-- **Vincular Documentos às Etapas:** Clareza total sobre quais arquivos resolvem quais fases do processo.
+## 📂 Estrutura Criada
 
-### 💰 Motor Financeiro (SAP Style)
-- **A/R Invoices:** Sistema de faturamento com gestão de parcelas (Installments).
-- **Alocação Inteligente:** Os pagamentos recebidos são alocados automaticamente às parcelas mais antigas em aberto (baixa automática).
-- **Invoices em PDF:** Gerador de faturas profissionais prontas para envio.
+```
+\\servidor\Sistemas\ERP_PYTHON\
+├── .venv\                  ✅ Ambiente virtual Python criado
+├── src\                    ✅ Código fonte
+│   ├── core\               ✅ Lógica de negócio
+│   ├── api\                ✅ Endpoints REST
+│   ├── database\           ✅ Models e conexão
+│   ├── templates\          ✅ Interface HTML
+│   ├── static\             ✅ CSS/JS/Imagens
+│   ├── utils\              ✅ Utilitários
+│   └── modules\            ✅ Módulos do sistema
+│       ├── vendas\
+│       ├── estoque\
+│       ├── producao\
+│       ├── financeiro\
+│       └── usuarios\
+├── config\                 ✅ Configurações Django
+├── logs\                   ✅ Logs do sistema
+├── storage\                ✅ Uploads e backups
+│   ├── uploads\
+│   ├── backups\
+│   └── temp\
+├── tests\                  ✅ Testes automatizados
+│   ├── unit\
+│   ├── integration\
+│   └── fixtures\
+├── docs\                   ✅ Documentação
+├── scripts\                ✅ Scripts de automação
+├── requirements.txt        ✅ Dependências Python
+├── .env.example            ✅ Template de configuração
+├── .env                    ✅ Configuração ativa
+└── .gitignore              ✅ Arquivos ignorados
 
-### 🤝 CRM e Leads
-- **Funil de Vendas:** Gestão de contatos interessados (Leads) antes da conversão em clientes.
-- **Dashboard Gerencial:** Visão em tempo real do faturamento total, valores a receber e distribuição de casos por status.
+```
 
-### 👤 Portal do Cliente VIP
-- **Transparência Total:** O cliente final possui um login exclusivo (via e-mail e passaporte).
-- **Timeline de Progresso:** Visualização do checklist concluído pelo cliente.
-- **Upload de Documentos:** O cliente pode enviar evidências diretamente pelo portal para revisão.
+## 🚀 Próximos Passos
+
+### 1. Instalar Dependências (No Servidor)
+
+Conecte-se ao servidor via RDP ou acesse remotamente e execute:
+
+```batch
+cd \\servidor\Sistemas\ERP_PYTHON
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+
+### 2. Inicializar Projeto Django
+
+```batch
+django-admin startproject config .
+python manage.py inspectdb > src\database\models_auto.py
+```
+
+### 3. Iniciar Servidor
+
+```batch
+python manage.py runserver 0.0.0.0:8080
+```
+
+**Acesso:**
+- Local (no servidor): http://localhost:8080
+- LAN: http://192.168.86.250:8080
+
+## 🔒 Segurança
+
+- ✅ Workspace isolado do sistema PHP
+- ✅ Banco de dados em modo Read-Only (DB_READ_ONLY=True)
+- ✅ Porta 8080 (não conflita com PHP na porta 8090)
+- ✅ Ambiente virtual isolado
+
+## 📝 Configuração
+
+Edite o arquivo `.env` para ajustar configurações:
+
+```bash
+# Banco de dados
+DB_NAME=iamoveis_calculos
+DB_USER=root
+DB_PASSWORD=
+DB_HOST=127.0.0.1
+
+# Modo Read-Only (protege produção)
+DB_READ_ONLY=True  # Mude para False apenas em produção
+```
+
+## 📚 Documentação
+
+Consulte os documentos de migração em:
+```
+\\servidor\Sistemas\iamoveis\
+├── MIGRATION_EXECUTIVE_SUMMARY.md
+├── MIGRATION_ROUTES_MAP.md
+├── MIGRATION_PHASE3_DETAILED.md
+├── MIGRATION_PHASE4_NETWORK.md
+└── WORKSPACE_ISOLATED_ARCHITECTURE.md
+```
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
-- **Backend:** Django (Python) 
-- **DB:** SQLite (Desenvolvimento)
-- **Frontend:** Bootstrap 5 & FontAwesome
-- **PDF:** ReportLab
-- **Segurança:** Sistema de permissões nativo do Django Admin
-
----
-
-## 🚀 Como Executar
-
-1. **Instale as dependências:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Execute as migrações:**
-   ```bash
-   python manage.py migrate
-   ```
-
-3. **Inicie o servidor:**
-   ```bash
-   python manage.py runserver
-   ```
-
-4. **Scripts de Utilidade:**
-   - `python generate_demo.py`: Gera dados de teste (Cliente, Processos, Leads e Faturas).
-   - `python fix_accents.py`: Corrige automaticamente acentuação em checklists.
-
----
-
-**Desenvolvido com foco em alta performance e organização imigratória. G IMIGRA - Elevando o padrão da sua advocacia.** 🇺🇸
+**Status:** ✅ Workspace criado e pronto para uso  
+**Localização:** Servidor 192.168.86.250  
+**Data de Criação:** 14 de Fevereiro de 2026

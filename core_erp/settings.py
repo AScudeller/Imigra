@@ -34,6 +34,14 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.scudcustomcabinetry.com',
+    'https://*.trycloudflare.com',
+    'http://*.scudcustomcabinetry.com',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+]
+
 
 # Application definition
 
@@ -90,7 +98,7 @@ DATABASES = {
         'NAME': 'erp_imigracao',
         'USER': 'root',
         'PASSWORD': '',
-        'HOST': '192.168.86.250',
+        'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -158,3 +166,29 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Configurações SAP B1 Style
 CURRENCY_SYMBOL = '$'
 DATE_FORMAT_JS = 'MM/DD/YYYY'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django_error.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

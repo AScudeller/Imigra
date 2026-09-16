@@ -17,6 +17,14 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,192.168.86.250,0.0.0.0').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.scudcustomcabinetry.com',
+    'https://*.trycloudflare.com',
+    'http://*.scudcustomcabinetry.com',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+]
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',

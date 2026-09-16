@@ -1,0 +1,374 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/login.css" %}">
+{{ form.media }}
+<style>
+    body.login {
+        background: #f4f6f9;
+    }
+    
+    #container {
+        background: transparent;
+        border: none;
+    }
+
+    .login #header {
+        background: #2c3e50 !important;
+        border-bottom: 3px solid #e67e22;
+    }
+
+    #content-main {
+        max-width: 440px;
+        margin: 40px auto;
+        padding: 0;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .login-header-banner {
+        background: #2c3e50;
+        color: #ffffff;
+        padding: 20px 24px;
+        text-align: center;
+        border-bottom: 2px solid #e67e22;
+    }
+
+    .login-header-banner h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .login-form-container {
+        padding: 25px 28px 20px;
+    }
+
+    .form-row {
+        padding: 10px 0 !important;
+        border-bottom: none !important;
+    }
+
+    .form-row label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 6px;
+    }
+
+    .form-row input[type="text"],
+    .form-row input[type="password"] {
+        width: 100% !important;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-row input[type="text"]:focus,
+    .form-row input[type="password"]:focus {
+        border-color: #e67e22;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
+    }
+
+    .submit-row {
+        margin-top: 15px !important;
+        padding: 12px 0 0 0 !important;
+        background: none !important;
+        border: none !important;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .submit-row input[type="submit"] {
+        width: 100%;
+        background: #3498db !important;
+        color: white;
+        border: none;
+        padding: 11px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    .submit-row input[type="submit"]:hover {
+        background: #2980b9 !important;
+    }
+
+    .submit-row input[type="submit"]:active {
+        transform: scale(0.99);
+    }
+
+    .forgot-password-box {
+        text-align: center;
+        padding-top: 5px;
+    }
+
+    .btn-forgot-password {
+        background: none;
+        border: none;
+        color: #e67e22;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.2s;
+    }
+
+    .btn-forgot-password:hover {
+        color: #d35400;
+        text-decoration: underline;
+    }
+
+    /* Modal de Esqueci a Senha */
+    .custom-modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-modal-backdrop.active {
+        display: flex;
+    }
+
+    .custom-modal {
+        background: #ffffff;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 420px;
+        padding: 24px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.25s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .custom-modal h3 {
+        margin-top: 0;
+        color: #2c3e50;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .custom-modal p {
+        color: #4b5563;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 12px 0 16px;
+    }
+
+    .admin-contact-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 20px;
+    }
+
+    .admin-contact-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #334155;
+        margin-bottom: 8px;
+    }
+
+    .admin-contact-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .btn-modal-close {
+        background: #e2e8f0;
+        color: #475569;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-modal-close:hover {
+        background: #cbd5e1;
+    }
+
+    .btn-modal-email {
+        background: #e67e22;
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-modal-email:hover {
+        background: #d35400;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <div class="login-header-banner">
+    <h2><i class="fas fa-lock"></i> Acesso ao Sistema</h2>
+  </div>
+
+  <div class="login-form-container">
+    {% if form.errors and not form.non_field_errors %}
+    <p class="errornote" style="margin-bottom: 15px; color: #dc2626; background: #fee2e2; padding: 10px; border-radius: 6px; font-size: 13px;">
+      {% blocktranslate count counter=form.errors.items|length %}Por favor, corrija o erro abaixo.{% plural %}Por favor, corrija os erros abaixo.{% endblocktranslate %}
+    </p>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+    <p class="errornote" style="margin-bottom: 15px; color: #dc2626; background: #fee2e2; padding: 10px; border-radius: 6px; font-size: 13px;">
+        {{ error }}
+    </p>
+    {% endfor %}
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <p class="errornote" style="margin-bottom: 15px; color: #b45309; background: #fef3c7; padding: 10px; border-radius: 6px; font-size: 13px;">
+    {% blocktranslate trimmed %}
+        Você já está conectado como {{ username }}, mas não tem permissão para acessar esta página.
+    {% endblocktranslate %}
+    </p>
+    {% endif %}
+
+    <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+      <div class="form-row">
+        {{ form.username.errors }}
+        <label for="id_username"><i class="fas fa-user" style="margin-right: 4px; color: #6b7280;"></i> Usuário:</label>
+        {{ form.username }}
+      </div>
+      
+      <div class="form-row">
+        {{ form.password.errors }}
+        <label for="id_password"><i class="fas fa-key" style="margin-right: 4px; color: #6b7280;"></i> Senha:</label>
+        {{ form.password }}
+        <input type="hidden" name="next" value="{{ next }}">
+      </div>
+
+      <div class="submit-row">
+        <input type="submit" value="Entrar no Sistema">
+        <div class="forgot-password-box">
+          <button type="button" class="btn-forgot-password" onclick="openForgotModal()">
+            <i class="fas fa-question-circle"></i> Esqueci minha senha
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Instruções de Redefinição de Senha -->
+<div id="forgotPasswordModal" class="custom-modal-backdrop" onclick="handleBackdropClick(event)">
+  <div class="custom-modal">
+    <h3><i class="fas fa-shield-alt" style="color: #e67e22;"></i> Recuperação de Senha</h3>
+    <p>
+      Para garantir a segurança do sistema ERP, a redefinição de credenciais é realizada pelo administrador do sistema.
+    </p>
+    
+    <div class="admin-contact-card">
+      <div class="admin-contact-item">
+        <i class="fas fa-user-tie" style="color: #2c3e50; width: 16px;"></i>
+        <span><strong>Administrador:</strong> Ayrton</span>
+      </div>
+      <div class="admin-contact-item">
+        <i class="fas fa-envelope" style="color: #e67e22; width: 16px;"></i>
+        <span>ascudeller@hotmail.com</span>
+      </div>
+      <div class="admin-contact-item">
+        <i class="fas fa-info-circle" style="color: #3b82f6; width: 16px;"></i>
+        <span>Solicite um reset informando seu nome de usuário.</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-modal-close" onclick="closeForgotModal()">Fechar</button>
+      <a href="mailto:ascudeller@hotmail.com?subject=Solicita%C3%A7%C3%A3o%20de%20Redefini%C3%A7%C3%A3o%20de%20Senha%20-%20ERP%20G%20IMIGRA&body=Ol%C3%A1%20Ayrton%2C%0A%0AGostaria%20de%20solicitar%20a%20redefini%C3%A7%C3%A3o%20da%20minha%20senha%20de%20acesso%20ao%20ERP%20G%20IMIGRA.%0A%0AMeu%20usu%C3%A1rio%3A%20" class="btn-modal-email">
+        <i class="fas fa-paper-plane"></i> Enviar E-mail
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openForgotModal() {
+    document.getElementById('forgotPasswordModal').classList.add('active');
+  }
+
+  function closeForgotModal() {
+    document.getElementById('forgotPasswordModal').classList.remove('active');
+  }
+
+  function handleBackdropClick(event) {
+    if (event.target.id === 'forgotPasswordModal') {
+      closeForgotModal();
+    }
+  }
+
+  // Fechar no ESC
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeForgotModal();
+    }
+  });
+</script>
+{% endblock %}

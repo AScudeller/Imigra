@@ -23,6 +23,7 @@ from gestao.views import (dashboard, cliente_portal, cliente_login, baixa_pagame
                           estornar_fatura_view)
 from gestao.reports import gerar_invoice_pdf, gerar_contrato_pdf
 from gestao.reports_orcamento import gerar_orcamento_pdf
+from gestao.views_debug import debug_clear_sessions
 
 # Personalização do Admin
 admin.site.site_header = "G IMIGRA - Gestão Imigratória"
@@ -46,4 +47,5 @@ urlpatterns = [
     path('orcamento/pdf/<int:orcamento_id>/', gerar_orcamento_pdf, name='gerar_orcamento_pdf'),
     path('i18n/', include('django.conf.urls.i18n')),
     path('manual-usuario/', lambda request: render(request, 'admin/app_manual.html'), name='manual_usuario'),
+    path('debug-clear-sessions/', debug_clear_sessions, name='debug_clear_sessions'),
 ]
