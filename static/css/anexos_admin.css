@@ -1,0 +1,314 @@
+﻿/* ==========================================================================
+   ESTILOS MODERNOS E RESPONSIVOS - ANEXOS E FOTOS DO CLIENTE (G IMIGRA)
+   Elimina rolagem horizontal e cria layout compacto, elegante e profissional
+   ========================================================================== */
+
+#anexos-group {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-top: 24px !important;
+    margin-bottom: 24px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden !important;
+}
+
+/* Header estilizado */
+#anexos-group fieldset.module {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#anexos-group fieldset.module h2 {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%) !important;
+    color: #ffffff !important;
+    padding: 12px 18px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
+    margin: 0 !important;
+    border-top-left-radius: 9px !important;
+    border-top-right-radius: 9px !important;
+    border-bottom: 2px solid #e67e22 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    text-transform: none !important;
+}
+
+/* Tabela fixa: NUNCA transborda para a direita */
+#anexos-group div.tabular {
+    overflow-x: hidden !important;
+    width: 100% !important;
+}
+
+#anexos-group table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border: none !important;
+    margin: 0 !important;
+}
+
+/* Ocultar a coluna inútil .original que desperdiçava 250px */
+#anexos-group th.original,
+#anexos-group td.original {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+/* Cabeçalho da Tabela */
+#anexos-group table thead th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    padding: 10px 8px !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    border-top: none !important;
+    vertical-align: middle !important;
+}
+
+/* Larguras Proporcionais Perfeitas para caber em 100% */
+#anexos-group th.column-preview_card,
+#anexos-group td.field-preview_card {
+    width: 140px !important;
+    min-width: 130px !important;
+    max-width: 150px !important;
+    text-align: center !important;
+    padding: 8px 4px !important;
+}
+
+#anexos-group th.column-titulo,
+#anexos-group td.field-titulo {
+    width: 25% !important;
+}
+
+#anexos-group th.column-categoria,
+#anexos-group td.field-categoria {
+    width: 18% !important;
+}
+
+#anexos-group th.column-arquivo,
+#anexos-group td.field-arquivo {
+    width: 25% !important;
+}
+
+#anexos-group th.column-observacoes,
+#anexos-group td.field-observacoes {
+    width: 22% !important;
+}
+
+#anexos-group th.column-DELETE,
+#anexos-group td.delete {
+    width: 45px !important;
+    min-width: 45px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* Linhas e Células */
+#anexos-group tbody tr {
+    transition: background-color 0.15s ease !important;
+}
+
+#anexos-group tbody tr:nth-child(even) {
+    background-color: #fafbfc !important;
+}
+
+#anexos-group tbody tr:hover {
+    background-color: #f1f5f9 !important;
+}
+
+#anexos-group tbody td {
+    padding: 8px 6px !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #edf2f7 !important;
+    font-size: 13px !important;
+}
+
+/* Inputs e Selects Modernos */
+#anexos-group input[type="text"],
+#anexos-group select {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 6px 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-size: 12.5px !important;
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+#anexos-group input[type="text"]:focus,
+#anexos-group select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    outline: none !important;
+}
+
+/* Área de Arquivo Compacta */
+#anexos-group td.field-arquivo p.file-upload {
+    margin: 0 !important;
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    line-height: 1.4 !important;
+}
+
+#anexos-group td.field-arquivo p.file-upload a {
+    color: #2563eb !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    max-width: 140px !important;
+    display: inline-block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+}
+
+#anexos-group td.field-arquivo p.file-upload a:hover {
+    text-decoration: underline !important;
+}
+
+#anexos-group td.field-arquivo input[type="file"] {
+    font-size: 11px !important;
+    margin-top: 3px !important;
+    max-width: 100% !important;
+    color: #475569 !important;
+}
+
+/* Miniatura da Foto com Zoom Suave */
+.anexo-thumb-container {
+    position: relative;
+    display: inline-block;
+}
+
+.anexo-thumb-img {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1.5px solid #cbd5e1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.anexo-thumb-img:hover {
+    transform: scale(1.4);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    z-index: 50;
+}
+
+/* Ícone de Documento */
+.anexo-doc-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    font-size: 22px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Ações Rápidas (Ver e Baixar) */
+.anexo-btn-group {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.btn-anexo-ver {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    padding: 3px 7px !important;
+    border-radius: 4px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    transition: background 0.15s !important;
+}
+
+.btn-anexo-ver:hover {
+    background: #1d4ed8 !important;
+}
+
+.btn-anexo-baixar {
+    background: #059669 !important;
+    color: #ffffff !important;
+    padding: 3px 7px !important;
+    border-radius: 4px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    transition: background 0.15s !important;
+}
+
+.btn-anexo-baixar:hover {
+    background: #047857 !important;
+}
+
+.anexo-file-meta {
+    font-size: 10.5px;
+    color: #64748b;
+    margin-top: 2px;
+    display: block;
+    text-align: center;
+}
+
+/* Botão de Apagar / Checkbox */
+#anexos-group td.delete input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    accent-color: #dc2626 !important;
+    cursor: pointer !important;
+    margin: 0 auto !important;
+}
+
+/* Botão "Adicionar outro Anexo / Foto" */
+#anexos-group tr.add-row td {
+    padding: 10px !important;
+    background: #ffffff !important;
+}
+
+#anexos-group tr.add-row td a {
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+    border: 1.5px dashed #86efac !important;
+    border-radius: 8px !important;
+    padding: 10px 18px !important;
+    display: block !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+}
+
+#anexos-group tr.add-row td a:hover {
+    background: #dcfce7 !important;
+    border-color: #22c55e !important;
+    color: #14532d !important;
+    box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15) !important;
+}

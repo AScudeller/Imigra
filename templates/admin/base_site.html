@@ -1,4 +1,5 @@
 {% extends "admin/base.html" %}
+{% load static %}
 
 {% block title %}G IMIGRA | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
@@ -34,6 +35,7 @@
 {% block extrahead %}
 {{ block.super }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/anexos_admin.css' %}">
 <style>
     /* Estilo do Header Principal */
     #header {

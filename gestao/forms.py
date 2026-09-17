@@ -30,3 +30,30 @@ class FiltroParcelasForm(forms.Form):
     data_inicio = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}))
     data_fim = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}))
     status = forms.ChoiceField(choices=[('ABERTO', 'Aberto / Atrasado'), ('TODOS', 'Todos')], required=False, widget=forms.Select(attrs={'class': 'form-control'}))
+
+from .models import AnexoCliente
+
+class AnexoClienteInlineForm(forms.ModelForm):
+    """
+    Formulário compacto e responsivo para o Inline de Anexos no cadastro de clientes.
+    Substitui Textarea gigante por TextInput compacto para não estourar a tela horizontalmente.
+    """
+    class Meta:
+        model = AnexoCliente
+        fields = '__all__'
+        widgets = {
+            'titulo': forms.TextInput(attrs={
+                'class': 'anexo-input-titulo',
+                'placeholder': 'Ex: Foto 3x4, Passaporte, Comprovante...',
+                'style': 'width: 100%; min-width: 120px; box-sizing: border-box; padding: 6px 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ced4da;'
+            }),
+            'categoria': forms.Select(attrs={
+                'class': 'anexo-select-categoria',
+                'style': 'width: 100%; min-width: 110px; box-sizing: border-box; padding: 6px 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ced4da;'
+            }),
+            'observacoes': forms.TextInput(attrs={
+                'class': 'anexo-input-obs',
+                'placeholder': 'Notas / observações...',
+                'style': 'width: 100%; min-width: 100px; box-sizing: border-box; padding: 6px 8px; font-size: 12px; border-radius: 4px; border: 1px solid #ced4da;'
+            }),
+        }

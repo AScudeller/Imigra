@@ -1,4 +1,4 @@
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -14,7 +14,7 @@ scratch_*.py
 # Django
 *.log
 db.sqlite3
-/static/
+/staticfiles/
 /media/
 
 # Environment
@@ -44,4 +44,3 @@ storage/temp/*
 # Database dumps
 backup_*.sql
 *.sql.gz
-
