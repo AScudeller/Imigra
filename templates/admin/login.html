@@ -302,7 +302,7 @@
         {{ form.password.errors }}
         <label for="id_password"><i class="fas fa-key" style="margin-right: 4px; color: #6b7280;"></i> Senha:</label>
         {{ form.password }}
-        <input type="hidden" name="next" value="{{ next }}">
+        <input type="hidden" name="next" value="{% if next and next != '/admin/' and next != '/admin' %}{{ next }}{% else %}/{% endif %}">
       </div>
 
       <div class="submit-row">
