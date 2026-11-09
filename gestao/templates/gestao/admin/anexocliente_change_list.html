@@ -1,31 +1,599 @@
 {% extends "admin/change_list.html" %}
 {% load i18n admin_urls static %}
 
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* ==========================================================================
+   CENTRAL DE ANEXOS POR CLIENTE - LAYOUT COMPACTO DE PASTAS (ACCORDION)
+   Estilos embutidos para evitar cache no Safari iPad e garantir perfeição visual
+   ========================================================================== */
+.anexos-hub-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #264b5d 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    border-bottom: 3px solid #e67e22;
+    margin-bottom: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.anexos-hub-topbar h1 {
+    color: #ffffff !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+}
+
+.anexos-hub-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-hub-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-hub-primary {
+    background: #e67e22 !important;
+    color: #ffffff !important;
+}
+
+.btn-hub-primary:hover {
+    background: #d35400 !important;
+}
+
+.btn-hub-outline {
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-hub-outline:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Barra horizontal compacta de filtros */
+.anexos-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 9px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+}
+
+.filter-search-box {
+    flex: 2;
+    min-width: 220px;
+    position: relative;
+}
+
+.filter-search-box input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: var(--body-bg, #0f172a);
+    color: var(--body-fg, #f8fafc);
+    font-size: 13px;
+}
+
+.filter-select-box {
+    flex: 1;
+    min-width: 170px;
+}
+
+.filter-select-box select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: var(--body-bg, #0f172a);
+    color: var(--body-fg, #f8fafc);
+    font-size: 13px;
+}
+
+/* Painel Global de Upload Múltiplo */
+.anexos-quick-upload-panel {
+    background: rgba(30, 41, 59, 0.95);
+    border: 2px solid #e67e22;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    color: #f8fafc;
+}
+
+.quick-upload-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.quick-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.quick-field label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #cbd5e1;
+}
+
+.quick-field select,
+.quick-field input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid #475569;
+    background: #0f172a;
+    color: #f8fafc;
+    font-size: 13px;
+}
+
+.multi-dropzone-area {
+    border: 2px dashed #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+/* Lista de Clientes (Pastas Fechadas por Padrão) */
+.clientes-pastas-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cliente-pasta-card {
+    background: var(--body-bg, #1e293b);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cliente-pasta-card.pasta-aberta {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.cliente-pasta-header {
+    background: linear-gradient(90deg, #1e3a5f 0%, #243b55 100%);
+    color: #ffffff;
+    padding: 11px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cliente-pasta-header:hover {
+    background: linear-gradient(90deg, #244774 0%, #2c4969 100%);
+}
+
+.cliente-pasta-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 240px;
+}
+
+.pasta-folder-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.cliente-pasta-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cliente-nome-txt {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.cliente-code-badge {
+    background: #e67e22;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.cliente-pasta-meta {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.78);
+    margin-top: 2px;
+}
+
+.cliente-pasta-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.counter-pill {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.btn-ver-arquivos-toggle {
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btn-ver-arquivos-toggle:hover {
+    background: #1d4ed8;
+}
+
+.btn-pasta-upload {
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.btn-pasta-upload:hover {
+    background: #15803d;
+}
+
+.btn-pasta-ficha {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff !important;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-decoration: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    white-space: nowrap;
+}
+
+/* Gaveta de Upload Múltiplo dentro do Cliente */
+.cliente-inline-upload-drawer {
+    background: rgba(15, 23, 42, 0.9);
+    border-top: 1px solid rgba(59, 130, 246, 0.4);
+    border-bottom: 2px solid #3b82f6;
+    padding: 12px 16px;
+    color: #f8fafc;
+}
+
+.drawer-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.drawer-col-files {
+    flex: 2;
+    min-width: 220px;
+}
+
+.drawer-col-cat,
+.drawer-col-titulo {
+    flex: 1;
+    min-width: 150px;
+}
+
+.drawer-form-row label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #cbd5e1;
+}
+
+.drawer-form-row select,
+.drawer-form-row input[type="text"],
+.drawer-file-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #475569;
+    background: #0f172a;
+    color: #f8fafc;
+    font-size: 12px;
+}
+
+.btn-drawer-submit {
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12.5px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Tabela Compacta de Arquivos dentro da Pasta do Cliente */
+.cliente-pasta-body {
+    padding: 0;
+    background: var(--darkened-bg, #0f172a);
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.anexos-compact-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.anexos-compact-table thead th {
+    background: rgba(30, 41, 59, 0.85);
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.anexos-compact-table tbody tr {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    transition: background 0.12s ease;
+}
+
+.anexos-compact-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.anexos-compact-table tbody td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    font-size: 13px;
+}
+
+.compact-thumb-box {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(148, 163, 184, 0.15);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    cursor: pointer;
+}
+
+.compact-thumb-box img {
+    width: 44px !important;
+    height: 44px !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.cat-pill-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(59, 130, 246, 0.18);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.row-action-btns {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.row-btn {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.row-btn-view {
+    background: #2563eb;
+    color: #ffffff !important;
+}
+
+.row-btn-download {
+    background: #059669;
+    color: #ffffff !important;
+}
+
+.row-btn-edit {
+    background: rgba(148, 163, 184, 0.2);
+    color: var(--body-fg, #e2e8f0) !important;
+}
+
+.row-btn-del {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171 !important;
+}
+
+/* Pills de seleção de múltiplos arquivos */
+.selected-files-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.pill-count-summary {
+    width: 100%;
+    font-size: 12px;
+    color: #4ade80;
+    margin-bottom: 2px;
+}
+
+.file-selected-pill {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #e2e8f0;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Modal Lightbox para ver foto/documento sem sair da tela */
+.anexo-lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.86);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.anexo-lightbox-box {
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    max-width: 92vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.anexo-lightbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    background: #0f172a;
+    color: #ffffff;
+    border-bottom: 1px solid #334155;
+}
+
+.anexo-lightbox-body {
+    padding: 16px;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-height: 78vh;
+}
+
+.anexo-lightbox-body img {
+    max-width: 85vw;
+    max-height: 74vh;
+    object-fit: contain;
+    border-radius: 6px;
+}
+</style>
+{% endblock %}
+
 {% block content_title %}
 <div class="anexos-hub-topbar">
     <div>
-        <h1 style="margin: 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-            <span>📂 Central de Anexos e Fotos por Cliente</span>
-        </h1>
-        <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.8;">
-            Arquivos organizados individualmente na pasta de cada cliente • <strong>{{ total_clientes_com_anexos }}</strong> cliente(s) exibido(s) • <strong>{{ total_arquivos_geral }}</strong> arquivo(s)
+        <h1>📂 Pastas de Anexos por Cliente</h1>
+        <p style="margin: 3px 0 0 0; font-size: 12.5px; opacity: 0.85;">
+            Toque em um cliente abaixo para abrir e ver os arquivos dele • <strong>{{ total_clientes_com_anexos }}</strong> cliente(s) • <strong>{{ total_arquivos_geral }}</strong> arquivo(s)
         </p>
     </div>
     <div class="anexos-hub-top-actions">
         <button type="button" class="btn-hub-action btn-hub-primary" onclick="toggleGlobalUploadBox()">
-            <i class="fas fa-cloud-upload-alt"></i> + Anexar Vários Arquivos
+            📤 + Anexar Vários Arquivos
         </button>
-        <a href="{% url 'admin:gestao_anexocliente_add' %}{% if cliente_id_atual %}?cliente={{ cliente_id_atual }}{% endif %}" class="btn-hub-action btn-hub-secondary">
-            <i class="fas fa-plus"></i> Tela de Cadastro
-        </a>
+        <button type="button" class="btn-hub-action btn-hub-outline" onclick="expandirOuRecolherTodas()">
+            ↕️ Expandir / Recolher Todos
+        </button>
         {% if modo_visao == 'tabela' %}
-            <a href="?visao=pastas{% if q_atual %}&q={{ q_atual }}{% endif %}{% if categoria_atual %}&categoria={{ categoria_atual }}{% endif %}{% if cliente_id_atual %}&cliente_id={{ cliente_id_atual }}{% endif %}" class="btn-hub-action btn-hub-outline">
-                📁 Ver Agrupado por Cliente
-            </a>
+            <a href="?visao=pastas" class="btn-hub-action btn-hub-outline">📁 Ver por Cliente</a>
         {% else %}
-            <a href="?visao=tabela" class="btn-hub-action btn-hub-outline" title="Alternar para lista simples">
-                📋 Visão em Lista
-            </a>
+            <a href="?visao=tabela" class="btn-hub-action btn-hub-outline">📋 Tabela Simples</a>
         {% endif %}
     </div>
 </div>
@@ -37,29 +605,25 @@
 {% if modo_visao == 'tabela' %}
     {{ block.super }}
 {% else %}
-<div id="content-main" class="anexos-pastas-wrapper">
+<div id="content-main">
 
     <!-- PAINEL GLOBAL DE UPLOAD MÚLTIPLO RÁPIDO -->
     <div id="global-multi-upload-box" class="anexos-quick-upload-panel" style="display: none;">
         <div class="quick-upload-header">
             <div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 700;">
-                    📤 Enviar Múltiplos Arquivos / Fotos de Uma Só Vez
-                </h3>
-                <p style="margin: 3px 0 0 0; font-size: 12.5px; opacity: 0.85;">
-                    Escolha o cliente e selecione quantos arquivos ou fotos desejar de uma única vez.
-                </p>
+                <strong style="font-size: 15px;">📤 Enviar Múltiplos Arquivos / Fotos de Uma Vez</strong>
+                <span style="font-size: 12px; opacity: 0.8; margin-left: 8px;">(Escolha o cliente e selecione quantos arquivos quiser)</span>
             </div>
-            <button type="button" class="btn-close-upload" onclick="toggleGlobalUploadBox()">✕ Fechar</button>
+            <button type="button" class="row-btn row-btn-del" onclick="toggleGlobalUploadBox()">✕ Fechar</button>
         </div>
-        <form method="post" enctype="multipart/form-data" class="quick-upload-form">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="acao_upload_rapido" value="1">
             <div class="quick-upload-grid">
                 <div class="quick-field">
-                    <label>1. Selecione o Cliente *</label>
-                    <select name="cliente_id" id="global-upload-cliente" required>
-                        <option value="">-- Escolha o Cliente --</option>
+                    <label>1. Cliente *</label>
+                    <select name="cliente_id" required>
+                        <option value="">-- Selecione o Cliente --</option>
                         {% for cli in todos_clientes %}
                             <option value="{{ cli.id }}" {% if cliente_id_atual == cli.id %}selected{% endif %}>
                                 {{ cli.nome }} ({{ cli.card_code }})
@@ -68,7 +632,7 @@
                     </select>
                 </div>
                 <div class="quick-field">
-                    <label>2. Tipo / Categoria</label>
+                    <label>2. Categoria</label>
                     <select name="categoria">
                         {% for cod, nome_cat in categorias_choices %}
                             <option value="{{ cod }}" {% if cod == 'DOCUMENTO' %}selected{% endif %}>{{ nome_cat }}</option>
@@ -76,8 +640,8 @@
                     </select>
                 </div>
                 <div class="quick-field">
-                    <label>3. Título / Descrição (Opcional)</label>
-                    <input type="text" name="titulo" placeholder="Em branco = usa o nome de cada arquivo">
+                    <label>3. Título (Opcional)</label>
+                    <input type="text" name="titulo" placeholder="Em branco = nome de cada arquivo">
                 </div>
                 <div class="quick-field">
                     <label>4. Observações (Opcional)</label>
@@ -88,31 +652,30 @@
             <div class="multi-dropzone-area" onclick="document.getElementById('global-files-input').click()">
                 <input type="file" id="global-files-input" name="arquivos_lote" multiple required
                        style="display: none;" onchange="mostrarArquivosSelecionados(this, 'global-files-preview')">
-                <div class="dropzone-icon">📂</div>
-                <div class="dropzone-title">Toque ou clique aqui para selecionar 1 ou vários arquivos / fotos</div>
-                <div class="dropzone-subtitle">Você pode marcar várias fotos ou documentos PDF de uma só vez</div>
+                <div style="font-size: 14px; font-weight: 700; color: #60a5fa;">
+                    📂 Toque aqui para escolher 1 ou vários arquivos / fotos de uma vez
+                </div>
                 <div id="global-files-preview" class="selected-files-pills"></div>
             </div>
 
-            <div class="quick-upload-footer">
-                <button type="submit" class="btn-hub-action btn-hub-success">
-                    <i class="fas fa-check-circle"></i> Salvar Todos os Arquivos no Cliente
+            <div style="text-align: right;">
+                <button type="submit" class="btn-drawer-submit" style="padding: 9px 20px; font-size: 13.5px;">
+                    ✅ Salvar Todos os Arquivos no Cliente
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- BARRA DE FILTROS E BUSCA POR CLIENTE / ARQUIVO -->
+    <!-- BARRA COMPACTA DE BUSCA E FILTROS -->
     <form method="get" class="anexos-filter-bar">
-        <div class="filter-item filter-search">
-            <label><i class="fas fa-search"></i> Buscar Cliente ou Documento</label>
-            <input type="text" name="q" value="{{ q_atual }}" placeholder="Digite o nome do cliente, código C0001 ou título do arquivo..."
+        <div class="filter-search-box">
+            <input type="text" name="q" value="{{ q_atual }}"
+                   placeholder="🔍 Buscar cliente pelo nome, código C0001 ou nome do documento..."
                    oninput="filtrarPastasNaTela(this.value)">
         </div>
-        <div class="filter-item">
-            <label><i class="fas fa-user"></i> Ir para Cliente</label>
+        <div class="filter-select-box">
             <select name="cliente_id" onchange="this.form.submit()">
-                <option value="">Todos os Clientes ({{ total_clientes_com_anexos }})</option>
+                <option value="">👤 Todos os Clientes ({{ total_clientes_com_anexos }})</option>
                 {% for cli in todos_clientes %}
                     <option value="{{ cli.id }}" {% if cliente_id_atual == cli.id %}selected{% endif %}>
                         {{ cli.nome }} ({{ cli.card_code }})
@@ -120,88 +683,80 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="filter-item">
-            <label><i class="fas fa-tags"></i> Categoria</label>
+        <div class="filter-select-box">
             <select name="categoria" onchange="this.form.submit()">
-                <option value="">Todas as Categorias</option>
+                <option value="">🏷️ Todas as Categorias</option>
                 {% for cod, nome_cat in categorias_choices %}
                     <option value="{{ cod }}" {% if categoria_atual == cod %}selected{% endif %}>{{ nome_cat }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="filter-actions">
-            <button type="submit" class="btn-filter-apply">Filtrar</button>
-            {% if q_atual or categoria_atual or cliente_id_atual %}
-                <a href="{% url 'admin:gestao_anexocliente_changelist' %}" class="btn-filter-clear">Limpar</a>
-            {% endif %}
-        </div>
+        {% if q_atual or categoria_atual or cliente_id_atual %}
+            <a href="{% url 'admin:gestao_anexocliente_changelist' %}" class="row-btn row-btn-edit">Limpar Filtros</a>
+        {% endif %}
     </form>
 
-    <!-- LISTA DE PASTAS AGRUPADAS POR CLIENTE -->
+    <!-- LISTA DE CLIENTES (PASTAS FECHADAS POR PADRÃO - CLICA PARA VER OS ARQUIVOS) -->
     {% if grupos_clientes %}
         <div class="clientes-pastas-container" id="clientes-pastas-list">
             {% for grupo in grupos_clientes %}
-                <div class="cliente-pasta-card" id="cliente-{{ grupo.cliente.id }}" data-search="{{ grupo.cliente.nome|lower }} {{ grupo.cliente.card_code|lower }} {{ grupo.cliente.email|lower }}">
-                    
-                    <!-- CABEÇALHO DA PASTA DO CLIENTE -->
-                    <div class="cliente-pasta-header">
-                        <div class="cliente-pasta-info" onclick="togglePastaCliente({{ grupo.cliente.id }})" style="cursor: pointer;">
-                            <div class="pasta-folder-icon">📁</div>
+                <div class="cliente-pasta-card" id="cliente-{{ grupo.cliente.id }}"
+                     data-search="{{ grupo.cliente.nome|lower }} {{ grupo.cliente.card_code|lower }} {{ grupo.cliente.email|lower }} {% for a in grupo.anexos %}{{ a.titulo|lower }} {% endfor %}">
+
+                    <!-- LINHA DO CLIENTE (CLICÁVEL PARA EXPANDIR/RECOLHER) -->
+                    <div class="cliente-pasta-header" onclick="togglePastaCliente({{ grupo.cliente.id }})">
+                        <div class="cliente-pasta-info">
+                            <div class="pasta-folder-icon" id="folder-emoji-{{ grupo.cliente.id }}">📁</div>
                             <div>
                                 <div class="cliente-pasta-title">
                                     <span class="cliente-nome-txt">{{ grupo.cliente.nome }}</span>
                                     <span class="cliente-code-badge">{{ grupo.cliente.card_code }}</span>
                                 </div>
                                 <div class="cliente-pasta-meta">
-                                    {% if grupo.cliente.telefone %}<span>📞 {{ grupo.cliente.telefone }}</span> • {% endif %}
-                                    <span>✉️ {{ grupo.cliente.email }}</span>
+                                    {% if grupo.cliente.telefone %}📞 {{ grupo.cliente.telefone }} • {% endif %}
+                                    ✉️ {{ grupo.cliente.email }}
                                     {% if grupo.ultimo_upload %}
-                                        • <span>🕒 Último envio: {{ grupo.ultimo_upload|date:"d/m/Y H:i" }}</span>
+                                        • 🕒 Último envio: {{ grupo.ultimo_upload|date:"d/m/Y H:i" }}
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="cliente-pasta-actions">
-                            <div class="pasta-counters">
-                                <span class="counter-pill counter-total" title="Total de arquivos deste cliente">
-                                    📎 {{ grupo.total_anexos }} arquivo(s)
-                                </span>
-                                {% if grupo.total_fotos > 0 %}
-                                    <span class="counter-pill counter-fotos">🖼️ {{ grupo.total_fotos }} foto(s)</span>
-                                {% endif %}
-                                {% if grupo.total_docs > 0 %}
-                                    <span class="counter-pill counter-docs">📄 {{ grupo.total_docs }} doc(s)</span>
-                                {% endif %}
-                            </div>
+                        <div class="cliente-pasta-actions" onclick="event.stopPropagation();">
+                            <span class="counter-pill">
+                                📎 {{ grupo.total_anexos }} arquivo(s)
+                            </span>
+
+                            <button type="button" class="btn-ver-arquivos-toggle" id="btn-toggle-{{ grupo.cliente.id }}"
+                                    onclick="togglePastaCliente({{ grupo.cliente.id }})">
+                                <span id="txt-toggle-{{ grupo.cliente.id }}">📂 Ver Arquivos ({{ grupo.total_anexos }})</span>
+                            </button>
 
                             <button type="button" class="btn-pasta-upload" onclick="abrirUploadCliente({{ grupo.cliente.id }})">
-                                <i class="fas fa-cloud-upload-alt"></i> + Anexar Arquivos
+                                + Anexar
                             </button>
 
-                            <a href="{% url 'admin:gestao_cliente_change' grupo.cliente.id %}" class="btn-pasta-ficha" title="Abrir cadastro completo do cliente">
-                                👤 Ver Cliente
+                            <a href="{% url 'admin:gestao_cliente_change' grupo.cliente.id %}" class="btn-pasta-ficha" title="Abrir ficha do cliente">
+                                👤 Cliente
                             </a>
-
-                            <button type="button" class="btn-pasta-toggle" onclick="togglePastaCliente({{ grupo.cliente.id }})" title="Recolher / Expandir pasta">
-                                <i class="fas fa-chevron-up" id="icon-pasta-{{ grupo.cliente.id }}"></i>
-                            </button>
                         </div>
                     </div>
 
-                    <!-- GAVETA DE UPLOAD MÚLTIPLO DIRETO NESTA PASTA DO CLIENTE -->
+                    <!-- GAVETA DE UPLOAD MÚLTIPLO DIRETO NO CLIENTE (OCULTA POR PADRÃO) -->
                     <div id="upload-drawer-{{ grupo.cliente.id }}" class="cliente-inline-upload-drawer" style="display: none;">
                         <form method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             <input type="hidden" name="acao_upload_rapido" value="1">
                             <input type="hidden" name="cliente_id" value="{{ grupo.cliente.id }}">
-                            <div class="drawer-top-title">
-                                <span>📤 <strong>Anexar múltiplos arquivos para {{ grupo.cliente.nome }} ({{ grupo.cliente.card_code }})</strong></span>
-                                <button type="button" class="btn-drawer-close" onclick="abrirUploadCliente({{ grupo.cliente.id }})">✕</button>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 12.5px; font-weight: 700; color: #60a5fa;">
+                                    📤 Anexar 1 ou vários arquivos para {{ grupo.cliente.nome }} ({{ grupo.cliente.card_code }})
+                                </span>
+                                <button type="button" class="row-btn row-btn-del" onclick="abrirUploadCliente({{ grupo.cliente.id }})">✕</button>
                             </div>
                             <div class="drawer-form-row">
                                 <div class="drawer-col-files">
-                                    <label>Arquivos / Fotos (Pode escolher vários de uma vez) *</label>
+                                    <label>Escolher Arquivos / Fotos (Múltiplos) *</label>
                                     <input type="file" name="arquivos_lote" multiple required class="drawer-file-input"
                                            onchange="mostrarArquivosSelecionados(this, 'drawer-preview-{{ grupo.cliente.id }}')">
                                     <div id="drawer-preview-{{ grupo.cliente.id }}" class="selected-files-pills"></div>
@@ -218,96 +773,101 @@
                                     <label>Título (Opcional)</label>
                                     <input type="text" name="titulo" placeholder="Em branco = nome do arquivo">
                                 </div>
-                                <div class="drawer-col-btn">
-                                    <button type="submit" class="btn-drawer-submit">
-                                        ⬆️ Enviar Tudo
-                                    </button>
+                                <div>
+                                    <button type="submit" class="btn-drawer-submit">⬆️ Enviar</button>
                                 </div>
                             </div>
                         </form>
                     </div>
 
-                    <!-- GRADE DE ARQUIVOS DO CLIENTE -->
-                    <div class="cliente-pasta-body" id="body-pasta-{{ grupo.cliente.id }}">
+                    <!-- LISTA COMPACTA DE ARQUIVOS DO CLIENTE (FECHADA POR PADRÃO - ABRE AO CLICAR!) -->
+                    <div class="cliente-pasta-body" id="body-pasta-{{ grupo.cliente.id }}" style="display: none;">
                         {% if grupo.anexos %}
-                            <div class="anexos-cards-grid">
-                                {% for anexo in grupo.anexos %}
-                                    <div class="anexo-item-card" data-file-title="{{ anexo.titulo|lower }} {{ anexo.observacoes|lower }}">
-                                        <!-- Preview Visual -->
-                                        <div class="anexo-card-thumb">
-                                            <span class="anexo-cat-badge cat-{{ anexo.categoria|lower }}">
-                                                {{ anexo.get_categoria_display }}
-                                            </span>
-                                            {% if anexo.is_image %}
-                                                <a href="{{ anexo.arquivo.url }}" target="_blank" title="Clique para abrir a imagem em tamanho real">
-                                                    <img src="{{ anexo.arquivo.url }}" alt="{{ anexo.titulo }}" loading="lazy">
-                                                </a>
-                                            {% elif anexo.extensao == '.pdf' %}
-                                                <a href="{{ anexo.arquivo.url }}" target="_blank" class="anexo-icon-placeholder pdf-placeholder" title="Abrir PDF">
-                                                    <span class="big-ext-icon">📄</span>
-                                                    <span class="big-ext-label">PDF</span>
-                                                </a>
-                                            {% else %}
-                                                <a href="{{ anexo.arquivo.url }}" target="_blank" class="anexo-icon-placeholder doc-placeholder" title="Abrir Arquivo">
-                                                    <span class="big-ext-icon">📁</span>
-                                                    <span class="big-ext-label">{{ anexo.extensao|upper|default:"ARQ" }}</span>
-                                                </a>
-                                            {% endif %}
-                                        </div>
-
-                                        <!-- Dados do Arquivo -->
-                                        <div class="anexo-card-details">
-                                            <div class="anexo-card-title" title="{{ anexo.titulo }}">
-                                                {{ anexo.titulo }}
-                                            </div>
-                                            <div class="anexo-card-meta">
-                                                <span>{{ anexo.extensao|upper|default:"ARQ" }}</span> •
-                                                <span>{{ anexo.tamanho_formatado }}</span> •
-                                                <span>{{ anexo.data_upload|date:"d/m/Y" }}</span>
-                                            </div>
-                                            {% if anexo.observacoes %}
-                                                <div class="anexo-card-obs" title="{{ anexo.observacoes }}">
-                                                    💬 {{ anexo.observacoes }}
+                            <table class="anexos-compact-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 56px;">Tipo</th>
+                                        <th>Documento / Título</th>
+                                        <th>Categoria</th>
+                                        <th>Tamanho / Data</th>
+                                        <th style="text-align: right;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for anexo in grupo.anexos %}
+                                        <tr>
+                                            <td style="width: 56px;">
+                                                {% if anexo.is_image %}
+                                                    <div class="compact-thumb-box" onclick="abrirPreviewModal('{{ anexo.arquivo.url }}', '{{ anexo.titulo|escapejs }}', true)" title="Clique para ampliar foto">
+                                                        <img src="{{ anexo.arquivo.url }}" alt="{{ anexo.titulo }}"
+                                                             style="width: 44px !important; height: 44px !important; max-width: 44px !important; max-height: 44px !important; object-fit: cover !important;">
+                                                    </div>
+                                                {% elif anexo.extensao == '.pdf' %}
+                                                    <a href="{{ anexo.arquivo.url }}" target="_blank" class="compact-thumb-box" style="text-decoration: none;" title="Abrir PDF">
+                                                        <span style="font-size: 20px;">📄</span>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ anexo.arquivo.url }}" target="_blank" class="compact-thumb-box" style="text-decoration: none;" title="Abrir Arquivo">
+                                                        <span style="font-size: 20px;">📎</span>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div style="font-weight: 700; font-size: 13.5px;">{{ anexo.titulo }}</div>
+                                                {% if anexo.observacoes %}
+                                                    <div style="font-size: 11.5px; opacity: 0.75; margin-top: 2px;">💬 {{ anexo.observacoes }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="cat-pill-tag">{{ anexo.get_categoria_display }}</span>
+                                            </td>
+                                            <td style="font-size: 12px; opacity: 0.85; white-space: nowrap;">
+                                                <strong>{{ anexo.extensao|upper|default:"ARQ" }}</strong> • {{ anexo.tamanho_formatado }}<br>
+                                                <span style="font-size: 11px; opacity: 0.75;">{{ anexo.data_upload|date:"d/m/Y H:i" }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="row-action-btns">
+                                                    {% if anexo.is_image %}
+                                                        <button type="button" class="row-btn row-btn-view"
+                                                                onclick="abrirPreviewModal('{{ anexo.arquivo.url }}', '{{ anexo.titulo|escapejs }}', true)">
+                                                            👁️ Ver Foto
+                                                        </button>
+                                                    {% else %}
+                                                        <a href="{{ anexo.arquivo.url }}" target="_blank" class="row-btn row-btn-view">
+                                                            👁️ Abrir
+                                                        </a>
+                                                    {% endif %}
+                                                    <a href="{{ anexo.arquivo.url }}" download class="row-btn row-btn-download">
+                                                        ⬇️ Baixar
+                                                    </a>
+                                                    <a href="{% url 'admin:gestao_anexocliente_change' anexo.id %}" class="row-btn row-btn-edit" title="Editar">
+                                                        ✏️
+                                                    </a>
+                                                    <a href="{% url 'admin:gestao_anexocliente_delete' anexo.id %}" class="row-btn row-btn-del" title="Excluir">
+                                                        🗑️
+                                                    </a>
                                                 </div>
-                                            {% endif %}
-                                        </div>
-
-                                        <!-- Botões de Ação -->
-                                        <div class="anexo-card-actions">
-                                            <a href="{{ anexo.arquivo.url }}" target="_blank" class="card-btn card-btn-view" title="Visualizar arquivo">
-                                                👁️ Ver
-                                            </a>
-                                            <a href="{{ anexo.arquivo.url }}" download class="card-btn card-btn-download" title="Baixar arquivo">
-                                                ⬇️ Baixar
-                                            </a>
-                                            <a href="{% url 'admin:gestao_anexocliente_change' anexo.id %}" class="card-btn card-btn-edit" title="Editar informações">
-                                                ✏️
-                                            </a>
-                                            <a href="{% url 'admin:gestao_anexocliente_delete' anexo.id %}" class="card-btn card-btn-delete" title="Excluir arquivo">
-                                                🗑️
-                                            </a>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         {% else %}
-                            <div class="pasta-empty-state">
-                                <p>Nenhum arquivo anexado para <strong>{{ grupo.cliente.nome }}</strong> ainda.</p>
-                                <button type="button" class="btn-pasta-upload" onclick="abrirUploadCliente({{ grupo.cliente.id }})">
-                                    📤 + Anexar Primeiros Arquivos
-                                </button>
+                            <div style="padding: 18px; text-align: center; opacity: 0.8;">
+                                Nenhum arquivo anexado para este cliente ainda.
                             </div>
                         {% endif %}
                     </div>
+
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <div class="anexos-empty-global">
-            <div style="font-size: 46px; margin-bottom: 10px;">📂</div>
-            <h3>Nenhum anexo encontrado</h3>
-            <p>Ainda não há arquivos para os filtros selecionados. Clique no botão abaixo para enviar 1 ou vários arquivos para um cliente.</p>
-            <button type="button" class="btn-hub-action btn-hub-primary" onclick="toggleGlobalUploadBox()" style="margin-top: 10px;">
+        <div style="text-align: center; padding: 36px 20px; border: 2px dashed rgba(148,163,184,0.3); border-radius: 10px;">
+            <div style="font-size: 40px; margin-bottom: 8px;">📂</div>
+            <h3 style="margin: 0 0 6px 0;">Nenhum anexo encontrado</h3>
+            <p style="margin: 0 0 14px 0; opacity: 0.8;">Clique no botão abaixo para enviar 1 ou vários arquivos para um cliente.</p>
+            <button type="button" class="btn-hub-action btn-hub-primary" onclick="toggleGlobalUploadBox()">
                 📤 + Anexar Arquivos Agora
             </button>
         </div>
@@ -315,39 +875,79 @@
 
 </div>
 
+<!-- MODAL LIGHTBOX PARA VISUALIZAR FOTO NA TELA COM 1 TOQUE -->
+<div id="anexo-lightbox" class="anexo-lightbox-overlay" onclick="fecharPreviewModal()">
+    <div class="anexo-lightbox-box" onclick="event.stopPropagation();">
+        <div class="anexo-lightbox-header">
+            <strong id="lightbox-title" style="font-size: 14px;">Visualizar Anexo</strong>
+            <div style="display: flex; gap: 8px;">
+                <a id="lightbox-download" href="#" download class="row-btn row-btn-download">⬇️ Baixar</a>
+                <a id="lightbox-newtab" href="#" target="_blank" class="row-btn row-btn-view">↗️ Nova Aba</a>
+                <button type="button" class="row-btn row-btn-del" onclick="fecharPreviewModal()">✕ Fechar</button>
+            </div>
+        </div>
+        <div class="anexo-lightbox-body">
+            <img id="lightbox-img" src="" alt="Preview">
+        </div>
+    </div>
+</div>
+
 <script>
+var todasExpandidas = false;
+
+function togglePastaCliente(clienteId) {
+    var body = document.getElementById('body-pasta-' + clienteId);
+    var card = document.getElementById('cliente-' + clienteId);
+    var emoji = document.getElementById('folder-emoji-' + clienteId);
+    var txt = document.getElementById('txt-toggle-' + clienteId);
+    if (!body) return;
+
+    if (body.style.display === 'none' || body.style.display === '') {
+        body.style.display = 'block';
+        if (card) card.classList.add('pasta-aberta');
+        if (emoji) emoji.textContent = '📂';
+        if (txt) txt.textContent = '🔼 Ocultar Arquivos';
+    } else {
+        body.style.display = 'none';
+        if (card) card.classList.remove('pasta-aberta');
+        if (emoji) emoji.textContent = '📁';
+        if (txt) txt.textContent = '📂 Ver Arquivos';
+    }
+}
+
+function expandirOuRecolherTodas() {
+    todasExpandidas = !todasExpandidas;
+    var cards = document.querySelectorAll('.cliente-pasta-card');
+    cards.forEach(function(card) {
+        var id = card.id.replace('cliente-', '');
+        var body = document.getElementById('body-pasta-' + id);
+        var emoji = document.getElementById('folder-emoji-' + id);
+        var txt = document.getElementById('txt-toggle-' + id);
+        if (!body) return;
+        if (todasExpandidas) {
+            body.style.display = 'block';
+            card.classList.add('pasta-aberta');
+            if (emoji) emoji.textContent = '📂';
+            if (txt) txt.textContent = '🔼 Ocultar Arquivos';
+        } else {
+            body.style.display = 'none';
+            card.classList.remove('pasta-aberta');
+            if (emoji) emoji.textContent = '📁';
+            if (txt) txt.textContent = '📂 Ver Arquivos';
+        }
+    });
+}
+
 function toggleGlobalUploadBox() {
     var box = document.getElementById('global-multi-upload-box');
     if (!box) return;
-    if (box.style.display === 'none' || box.style.display === '') {
-        box.style.display = 'block';
-        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-        box.style.display = 'none';
-    }
+    box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
 }
 
 function abrirUploadCliente(clienteId) {
     var drawer = document.getElementById('upload-drawer-' + clienteId);
     if (!drawer) return;
-    if (drawer.style.display === 'none' || drawer.style.display === '') {
-        drawer.style.display = 'block';
-    } else {
-        drawer.style.display = 'none';
-    }
-}
-
-function togglePastaCliente(clienteId) {
-    var body = document.getElementById('body-pasta-' + clienteId);
-    var icon = document.getElementById('icon-pasta-' + clienteId);
-    if (!body) return;
-    if (body.style.display === 'none') {
-        body.style.display = 'block';
-        if (icon) icon.className = 'fas fa-chevron-up';
-    } else {
-        body.style.display = 'none';
-        if (icon) icon.className = 'fas fa-chevron-down';
-    }
+    drawer.style.display = (drawer.style.display === 'none' || drawer.style.display === '') ? 'block' : 'none';
 }
 
 function mostrarArquivosSelecionados(input, previewContainerId) {
@@ -358,7 +958,7 @@ function mostrarArquivosSelecionados(input, previewContainerId) {
 
     var countBadge = document.createElement('div');
     countBadge.className = 'pill-count-summary';
-    countBadge.innerHTML = '✅ <strong>' + input.files.length + ' arquivo(s) selecionado(s) pronto(s) para envio:</strong>';
+    countBadge.innerHTML = '✅ <strong>' + input.files.length + ' arquivo(s) selecionado(s):</strong>';
     container.appendChild(countBadge);
 
     for (var i = 0; i < input.files.length; i++) {
@@ -378,22 +978,45 @@ function filtrarPastasNaTela(termo) {
     var q = (termo || '').toLowerCase().trim();
     var pastas = document.querySelectorAll('.cliente-pasta-card');
     pastas.forEach(function(pasta) {
-        var textoCliente = pasta.getAttribute('data-search') || '';
-        var cards = pasta.querySelectorAll('.anexo-item-card');
-        var algumCardMatch = false;
-        cards.forEach(function(c) {
-            var t = c.getAttribute('data-file-title') || '';
-            if (t.indexOf(q) !== -1) {
-                algumCardMatch = true;
-            }
-        });
-        if (!q || textoCliente.indexOf(q) !== -1 || algumCardMatch) {
+        var texto = pasta.getAttribute('data-search') || '';
+        if (!q || texto.indexOf(q) !== -1) {
             pasta.style.display = '';
         } else {
             pasta.style.display = 'none';
         }
     });
 }
+
+function abrirPreviewModal(url, titulo) {
+    var modal = document.getElementById('anexo-lightbox');
+    var img = document.getElementById('lightbox-img');
+    var titleEl = document.getElementById('lightbox-title');
+    var dl = document.getElementById('lightbox-download');
+    var nt = document.getElementById('lightbox-newtab');
+    if (!modal || !img) return;
+    img.src = url;
+    if (titleEl) titleEl.textContent = titulo;
+    if (dl) dl.href = url;
+    if (nt) nt.href = url;
+    modal.style.display = 'flex';
+}
+
+function fecharPreviewModal() {
+    var modal = document.getElementById('anexo-lightbox');
+    var img = document.getElementById('lightbox-img');
+    if (modal) modal.style.display = 'none';
+    if (img) img.src = '';
+}
+
+// Se veio redirecionado para um cliente específico (#cliente-ID), abre apenas a pasta daquele cliente
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash && window.location.hash.indexOf('#cliente-') === 0) {
+        var cid = window.location.hash.replace('#cliente-', '');
+        togglePastaCliente(cid);
+        var el = document.getElementById('cliente-' + cid);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+});
 </script>
 {% endif %}
 {% endblock %}

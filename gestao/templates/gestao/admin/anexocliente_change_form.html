@@ -1,27 +1,92 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls static %}
 
+{% block extrahead %}
+{{ block.super }}
+<style>
+.anexos-hub-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #264b5d 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    border-bottom: 3px solid #e67e22;
+    margin-bottom: 14px;
+}
+.btn-hub-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+.multi-file-helper-box {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px dashed #3b82f6;
+    max-width: 540px;
+}
+.multi-file-tip {
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+.selected-files-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+.pill-count-summary {
+    width: 100%;
+    font-size: 12.5px;
+    color: #4ade80;
+    margin-bottom: 4px;
+}
+.file-selected-pill {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
 {% block content_title %}
-<div class="anexos-hub-topbar" style="margin-bottom: 14px;">
+<div class="anexos-hub-topbar">
     <div>
-        <h1 style="margin: 0; font-size: 20px; font-weight: 700;">
+        <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #ffffff !important;">
             {% if add %}
                 📤 Adicionar Anexo(s) e Foto(s) do Cliente
             {% else %}
                 ✏️ Editar Anexo: {{ original.titulo }}
             {% endif %}
         </h1>
-        <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.85;">
+        <p style="margin: 4px 0 0 0; font-size: 12.5px; opacity: 0.85;">
             {% if add %}
-                Você pode escolher <strong>1 ou vários arquivos de uma só vez</strong> no botão "Escolher Arquivos". Todos ficarão agrupados na pasta do cliente selecionado.
+                Você pode escolher <strong>1 ou vários arquivos de uma só vez</strong> no botão "Escolher Arquivos".
             {% else %}
                 Cliente: <strong>{{ original.cliente.nome }} ({{ original.cliente.card_code }})</strong>
             {% endif %}
         </p>
     </div>
     <div>
-        <a href="{% url 'admin:gestao_anexocliente_changelist' %}" class="btn-hub-action btn-hub-outline">
-            📁 Voltar para Pastas por Cliente
+        <a href="{% url 'admin:gestao_anexocliente_changelist' %}" class="btn-hub-outline">
+            📁 Voltar para Pastas de Clientes
         </a>
     </div>
 </div>
@@ -35,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fileInputs.forEach(function(input) {
         input.setAttribute('multiple', 'multiple');
 
-        // Criar área visual de dicas e lista de arquivos selecionados logo abaixo do botão de arquivo
         var infoBox = document.createElement('div');
         infoBox.className = 'multi-file-helper-box';
         infoBox.innerHTML = (
@@ -43,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '💡 <strong>Dica de Envio Múltiplo:</strong> Você pode selecionar vários arquivos/fotos de uma só vez. ' +
             'Se deixar o campo <em>Título / Descrição</em> em branco, o nome de cada arquivo será usado automaticamente.' +
             '</div>' +
-            '<div id="add-form-files-preview" class="selected-files-pills" style="margin-top: 8px;"></div>'
+            '<div id="add-form-files-preview" class="selected-files-pills"></div>'
         );
         if (input.parentNode) {
             input.parentNode.appendChild(infoBox);
