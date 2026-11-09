@@ -1,12 +1,36 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.db.models import Q
+from django.shortcuts import redirect
+from django.utils.html import format_html
+from django.urls import reverse
+from simple_history.admin import SimpleHistoryAdmin
+import os
+
 from .models import (Cliente, Processo, Documento, Fatura, Parcela, Pagamento, 
                      AlocacaoPagamento, ModeloContrato, TipoVisto, EtapaPadrao, 
                      EtapaProcesso, Lead, Despesa, LogNotificacao, Orcamento, 
                      OrcamentoParcela, AnexoCliente)
-from simple_history.admin import SimpleHistoryAdmin
-from django.utils.html import format_html
-from django.urls import reverse
-from .forms import AnexoClienteInlineForm
+from .forms import AnexoClienteInlineForm, AnexoClienteAdminForm
+
+
+def gerar_titulo_anexo(nome_arquivo, titulo_base='', total_arquivos=1):
+    """
+    Gera um título amigável para cada arquivo enviado em lote.
+    - Se titulo_base estiver vazio, usa o nome limpo do próprio arquivo (sem extensão).
+    - Se houver apenas 1 arquivo e titulo_base foi preenchido, usa titulo_base.
+    - Se houver múltiplos arquivos e titulo_base foi preenchido, combina ambos.
+    """
+    base_name = os.path.basename(nome_arquivo or 'Arquivo')
+    nome_sem_ext, _ = os.path.splitext(base_name)
+    nome_limpo = nome_sem_ext.replace('_', ' ').strip() or base_name
+    titulo_base = (titulo_base or '').strip()
+
+    if not titulo_base:
+        return nome_limpo
+    if total_arquivos <= 1:
+        return titulo_base
+    return f"{titulo_base} - {nome_limpo}"
+
 
 # --- INLINES GERAIS ---
 
@@ -74,7 +98,7 @@ class AnexoClienteInline(admin.TabularInline):
             return format_html(
                 '<div style="text-align: center; padding: 4px;">'
                 '<span style="display: inline-block; font-size: 20px; color: #94a3b8;">⬆️</span><br>'
-                '<span style="font-size: 11px; color: #64748b; font-weight: 500;">Novo Envio</span>'
+                '<span style="font-size: 11px; color: #64748b; font-weight: 500;">Novo Envio (1 ou vários)</span>'
                 '</div>'
             )
         
@@ -117,15 +141,190 @@ class AnexoClienteInline(admin.TabularInline):
 
 @admin.register(AnexoCliente)
 class AnexoClienteAdmin(SimpleHistoryAdmin):
+    form = AnexoClienteAdminForm
+    change_list_template = 'gestao/admin/anexocliente_change_list.html'
+    change_form_template = 'gestao/admin/anexocliente_change_form.html'
     list_display = ('miniatura_preview', 'titulo', 'cliente', 'categoria', 'extensao_fmt', 'tamanho_formatado', 'data_upload', 'acoes')
-    list_filter = ('categoria', 'data_upload')
+    list_filter = ('categoria', 'data_upload', 'cliente')
     search_fields = ('titulo', 'cliente__nome', 'cliente__card_code', 'observacoes')
-    readonly_fields = ('miniatura_preview', 'data_upload', 'acoes')
 
     class Media:
         css = {
             'all': ('css/anexos_admin.css',)
         }
+
+    def get_fields(self, request, obj=None):
+        if obj is None:
+            # Na tela de Adicionar: oculta campos vazios de leitura (Preview, Data, Ações)
+            return ('cliente', 'categoria', 'arquivo', 'titulo', 'observacoes')
+        return ('cliente', 'categoria', 'titulo', 'arquivo', 'observacoes', 'miniatura_preview', 'data_upload', 'acoes')
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ()
+        return ('miniatura_preview', 'data_upload', 'acoes')
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        cliente_id = request.GET.get('cliente')
+        if cliente_id and not object_id:
+            extra_context['cliente_pre_selecionado'] = Cliente.objects.filter(pk=cliente_id).first()
+        return super().changeform_view(request, object_id, form_url, extra_context=extra_context)
+
+    def save_model(self, request, obj, form, change):
+        arquivos = request.FILES.getlist('arquivo')
+        titulo_digitado = form.cleaned_data.get('titulo', '')
+
+        if arquivos:
+            total = len(arquivos)
+            # Primeiro arquivo vai no objeto principal
+            obj.arquivo = arquivos[0]
+            obj.titulo = gerar_titulo_anexo(arquivos[0].name, titulo_digitado, total)
+            super().save_model(request, obj, form, change)
+
+            # Arquivos adicionais do lote (se o usuário selecionou 2 ou mais arquivos)
+            for arq_extra in arquivos[1:]:
+                AnexoCliente.objects.create(
+                    cliente=obj.cliente,
+                    titulo=gerar_titulo_anexo(arq_extra.name, titulo_digitado, total),
+                    categoria=obj.categoria,
+                    arquivo=arq_extra,
+                    observacoes=obj.observacoes,
+                )
+            request._lote_anexos_qtd = total
+            request._lote_anexos_cliente = obj.cliente
+        else:
+            if not obj.titulo and obj.arquivo:
+                obj.titulo = gerar_titulo_anexo(obj.arquivo.name, '', 1)
+            super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        qtd = getattr(request, '_lote_anexos_qtd', 1)
+        cliente = getattr(request, '_lote_anexos_cliente', obj.cliente)
+
+        if qtd > 1:
+            self.message_user(
+                request,
+                f"✅ {qtd} arquivos foram anexados com sucesso na pasta do cliente {cliente.nome} ({cliente.card_code})!",
+                level=messages.SUCCESS
+            )
+        if "_addanother" in request.POST:
+            url = f"{reverse('admin:gestao_anexocliente_add')}?cliente={cliente.id}"
+            return redirect(url)
+        if "_continue" in request.POST:
+            return super().response_add(request, obj, post_url_continue)
+        # Redireciona para a tela agrupada direto na pasta do cliente
+        url = f"{reverse('admin:gestao_anexocliente_changelist')}#cliente-{cliente.id}"
+        return redirect(url)
+
+    def response_change(self, request, obj):
+        if "_continue" in request.POST or "_saveasnew" in request.POST or "_addanother" in request.POST:
+            return super().response_change(request, obj)
+        url = f"{reverse('admin:gestao_anexocliente_changelist')}#cliente-{obj.cliente_id}"
+        return redirect(url)
+
+    def changelist_view(self, request, extra_context=None):
+        # Processamento de Upload Rápido Múltiplo direto da tela de Pastas por Cliente
+        if request.method == 'POST' and request.POST.get('acao_upload_rapido') == '1':
+            cliente_id = request.POST.get('cliente_id')
+            categoria = request.POST.get('categoria', 'DOCUMENTO')
+            titulo_base = request.POST.get('titulo', '').strip()
+            observacoes = request.POST.get('observacoes', '').strip()
+            arquivos = request.FILES.getlist('arquivos_lote')
+
+            cliente = Cliente.objects.filter(pk=cliente_id).first()
+            if not cliente:
+                self.message_user(request, "⚠️ Selecione um cliente válido para anexar os arquivos.", level=messages.ERROR)
+            elif not arquivos:
+                self.message_user(request, "⚠️ Selecione pelo menos 1 arquivo para enviar.", level=messages.WARNING)
+            else:
+                total = len(arquivos)
+                for arq in arquivos:
+                    AnexoCliente.objects.create(
+                        cliente=cliente,
+                        titulo=gerar_titulo_anexo(arq.name, titulo_base, total),
+                        categoria=categoria,
+                        arquivo=arq,
+                        observacoes=observacoes,
+                    )
+                self.message_user(
+                    request,
+                    f"✅ {total} arquivo(s) anexado(s) com sucesso para o cliente {cliente.nome} ({cliente.card_code})!",
+                    level=messages.SUCCESS
+                )
+                return redirect(f"{reverse('admin:gestao_anexocliente_changelist')}#cliente-{cliente.id}")
+            return redirect(reverse('admin:gestao_anexocliente_changelist'))
+
+        # Filtros da visão agrupada por Cliente
+        q = request.GET.get('q', '').strip()
+        categoria_filtro = request.GET.get('categoria', '').strip()
+        cliente_filtro = request.GET.get('cliente_id', '').strip()
+        modo_visao = request.GET.get('visao', 'pastas').strip()
+
+        anexos_qs = AnexoCliente.objects.select_related('cliente').order_by('-data_upload')
+        if q:
+            anexos_qs = anexos_qs.filter(
+                Q(titulo__icontains=q) |
+                Q(cliente__nome__icontains=q) |
+                Q(cliente__card_code__icontains=q) |
+                Q(observacoes__icontains=q) |
+                Q(arquivo__icontains=q)
+            )
+        if categoria_filtro:
+            anexos_qs = anexos_qs.filter(categoria=categoria_filtro)
+        if cliente_filtro and cliente_filtro.isdigit():
+            anexos_qs = anexos_qs.filter(cliente_id=int(cliente_filtro))
+
+        # Agrupar anexos por Cliente mantendo cada qual com o seu cliente
+        grupos_dict = {}
+        for anexo in anexos_qs:
+            cid = anexo.cliente_id
+            if cid not in grupos_dict:
+                grupos_dict[cid] = {
+                    'cliente': anexo.cliente,
+                    'anexos': [],
+                    'total_anexos': 0,
+                    'total_fotos': 0,
+                    'total_docs': 0,
+                    'ultimo_upload': anexo.data_upload,
+                }
+            grupo = grupos_dict[cid]
+            grupo['anexos'].append(anexo)
+            grupo['total_anexos'] += 1
+            if anexo.is_image:
+                grupo['total_fotos'] += 1
+            else:
+                grupo['total_docs'] += 1
+
+        # Se filtrou por um cliente específico que ainda não tem anexos, exibe a pasta vazia dele para facilitar o envio
+        if cliente_filtro and cliente_filtro.isdigit() and int(cliente_filtro) not in grupos_dict:
+            cli_obj = Cliente.objects.filter(pk=int(cliente_filtro)).first()
+            if cli_obj:
+                grupos_dict[cli_obj.id] = {
+                    'cliente': cli_obj,
+                    'anexos': [],
+                    'total_anexos': 0,
+                    'total_fotos': 0,
+                    'total_docs': 0,
+                    'ultimo_upload': None,
+                }
+
+        # Ordena as pastas por nome do cliente
+        grupos_clientes = sorted(grupos_dict.values(), key=lambda g: g['cliente'].nome.lower())
+
+        extra_context = extra_context or {}
+        extra_context.update({
+            'grupos_clientes': grupos_clientes,
+            'total_arquivos_geral': sum(g['total_anexos'] for g in grupos_clientes),
+            'total_clientes_com_anexos': len(grupos_clientes),
+            'todos_clientes': Cliente.objects.all().order_by('nome'),
+            'categorias_choices': AnexoCliente.CATEGORIAS,
+            'q_atual': q,
+            'categoria_atual': categoria_filtro,
+            'cliente_id_atual': int(cliente_filtro) if (cliente_filtro and cliente_filtro.isdigit()) else '',
+            'modo_visao': modo_visao,
+        })
+        return super().changelist_view(request, extra_context=extra_context)
 
     def miniatura_preview(self, obj):
         if not obj or not obj.arquivo:
@@ -154,6 +353,7 @@ class AnexoClienteAdmin(SimpleHistoryAdmin):
         )
     acoes.short_description = "Ações"
 
+
 @admin.register(Cliente)
 class ClienteAdmin(SimpleHistoryAdmin):
     list_display = ('card_code', 'nome', 'email', 'telefone', 'total_anexos_fmt', 'saldo_atual_fmt')
@@ -162,17 +362,70 @@ class ClienteAdmin(SimpleHistoryAdmin):
     readonly_fields = ('card_code', 'saldo_atual')
     inlines = [AnexoClienteInline, FaturaClienteInline, PagamentoClienteInline] # Painel de Anexos + Financeiro Integrado
 
+    def save_formset(self, request, form, formset, change):
+        if formset.model == AnexoCliente:
+            instances = formset.save(commit=False)
+            for obj in formset.deleted_objects:
+                obj.delete()
+
+            saved_instances = set()
+            for inline_form in formset.forms:
+                if not inline_form.has_changed() or inline_form in formset.deleted_forms:
+                    continue
+                instance = inline_form.instance
+                if not instance.cliente_id:
+                    instance.cliente = form.instance
+
+                file_field_name = inline_form.add_prefix('arquivo')
+                uploaded_files = request.FILES.getlist(file_field_name)
+                titulo_digitado = inline_form.cleaned_data.get('titulo', '')
+
+                if len(uploaded_files) >= 1:
+                    total = len(uploaded_files)
+                    instance.arquivo = uploaded_files[0]
+                    instance.titulo = gerar_titulo_anexo(uploaded_files[0].name, titulo_digitado, total)
+                    instance.save()
+                    saved_instances.add(instance.pk)
+
+                    # Se o usuário selecionou múltiplos arquivos na mesma linha do inline, cria os demais automaticamente
+                    for extra_f in uploaded_files[1:]:
+                        AnexoCliente.objects.create(
+                            cliente=form.instance,
+                            titulo=gerar_titulo_anexo(extra_f.name, titulo_digitado, total),
+                            categoria=instance.categoria,
+                            arquivo=extra_f,
+                            observacoes=instance.observacoes,
+                        )
+                elif instance.arquivo:
+                    if not instance.titulo:
+                        instance.titulo = gerar_titulo_anexo(instance.arquivo.name, '', 1)
+                    instance.save()
+                    saved_instances.add(instance.pk)
+
+            for inst in instances:
+                if inst.pk not in saved_instances and inst.arquivo:
+                    if not inst.titulo:
+                        inst.titulo = gerar_titulo_anexo(inst.arquivo.name, '', 1)
+                    inst.save()
+            formset.save_m2m()
+        else:
+            super().save_formset(request, form, formset, change)
+
     def total_anexos_fmt(self, obj):
         total = obj.anexos.count()
-        url = reverse('admin:gestao_cliente_change', args=[obj.id])
+        url_pasta = f"{reverse('admin:gestao_anexocliente_changelist')}?cliente_id={obj.id}#cliente-{obj.id}"
+        url_add = f"{reverse('admin:gestao_anexocliente_add')}?cliente={obj.id}"
         if total > 0:
             return format_html(
-                '<a href="{}" style="background: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 11px; text-decoration: none;" title="Ver ou adicionar anexos">📁 {} anexo(s)</a>',
-                url, total
+                '<div style="display: flex; gap: 5px; align-items: center; flex-wrap: nowrap;">'
+                '<a href="{}" style="background: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 11px; text-decoration: none; white-space: nowrap;" title="Ver pasta de arquivos deste cliente">📁 {} anexo(s)</a>'
+                '<a href="{}" style="background: #2563eb; color: white; padding: 3px 8px; border-radius: 12px; font-weight: 600; font-size: 11px; text-decoration: none; white-space: nowrap;" title="Anexar vários arquivos para este cliente">+ Anexar</a>'
+                '</div>',
+                url_pasta, total, url_add
             )
         return format_html(
-            '<a href="{}" style="background: #e9ecef; color: #495057; padding: 3px 10px; border-radius: 12px; font-size: 11px; text-decoration: none; border: 1px solid #ced4da;" title="Adicionar anexo">+ Anexar</a>',
-            url
+            '<a href="{}" style="background: #2563eb; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap;" title="Anexar arquivos para este cliente">+ Anexar Arquivos</a>',
+            url_add
         )
     total_anexos_fmt.short_description = "Anexos / Fotos"
 

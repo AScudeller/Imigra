@@ -119,7 +119,7 @@ class AnexoCliente(models.Model):
     ]
 
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='anexos', verbose_name=_("Cliente"))
-    titulo = models.CharField(_("Título / Descrição"), max_length=255)
+    titulo = models.CharField(_("Título / Descrição"), max_length=255, blank=True, help_text=_("Opcional: se deixar em branco, usará automaticamente o nome de cada arquivo."))
     categoria = models.CharField(_("Tipo / Categoria"), max_length=50, choices=CATEGORIAS, default='DOCUMENTO')
     arquivo = models.FileField(_("Arquivo / Foto"), upload_to='clientes/anexos/%Y/%m/')
     observacoes = models.TextField(_("Observações"), blank=True)
@@ -132,7 +132,20 @@ class AnexoCliente(models.Model):
         ordering = ['-data_upload']
 
     def __str__(self):
-        return f"{self.titulo} - {self.cliente.nome}"
+        return f"{self.titulo or 'Anexo'} - {self.cliente.nome}"
+
+    def save(self, *args, **kwargs):
+        if not self.titulo and self.arquivo and hasattr(self.arquivo, 'name') and self.arquivo.name:
+            base_name = os.path.basename(self.arquivo.name)
+            nome_sem_ext, _ = os.path.splitext(base_name)
+            self.titulo = nome_sem_ext.replace('_', ' ').strip() or base_name
+        super().save(*args, **kwargs)
+
+    @property
+    def nome_arquivo(self):
+        if self.arquivo and hasattr(self.arquivo, 'name') and self.arquivo.name:
+            return os.path.basename(self.arquivo.name)
+        return ""
 
     @property
     def extensao(self):

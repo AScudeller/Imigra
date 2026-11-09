@@ -1,0 +1,78 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{% block content_title %}
+<div class="anexos-hub-topbar" style="margin-bottom: 14px;">
+    <div>
+        <h1 style="margin: 0; font-size: 20px; font-weight: 700;">
+            {% if add %}
+                📤 Adicionar Anexo(s) e Foto(s) do Cliente
+            {% else %}
+                ✏️ Editar Anexo: {{ original.titulo }}
+            {% endif %}
+        </h1>
+        <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.85;">
+            {% if add %}
+                Você pode escolher <strong>1 ou vários arquivos de uma só vez</strong> no botão "Escolher Arquivos". Todos ficarão agrupados na pasta do cliente selecionado.
+            {% else %}
+                Cliente: <strong>{{ original.cliente.nome }} ({{ original.cliente.card_code }})</strong>
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'admin:gestao_anexocliente_changelist' %}" class="btn-hub-action btn-hub-outline">
+            📁 Voltar para Pastas por Cliente
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block after_field_sets %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var fileInputs = document.querySelectorAll('input[type="file"].anexo-multi-file-input, input[type="file"][name="arquivo"]');
+    fileInputs.forEach(function(input) {
+        input.setAttribute('multiple', 'multiple');
+
+        // Criar área visual de dicas e lista de arquivos selecionados logo abaixo do botão de arquivo
+        var infoBox = document.createElement('div');
+        infoBox.className = 'multi-file-helper-box';
+        infoBox.innerHTML = (
+            '<div class="multi-file-tip">' +
+            '💡 <strong>Dica de Envio Múltiplo:</strong> Você pode selecionar vários arquivos/fotos de uma só vez. ' +
+            'Se deixar o campo <em>Título / Descrição</em> em branco, o nome de cada arquivo será usado automaticamente.' +
+            '</div>' +
+            '<div id="add-form-files-preview" class="selected-files-pills" style="margin-top: 8px;"></div>'
+        );
+        if (input.parentNode) {
+            input.parentNode.appendChild(infoBox);
+        }
+
+        input.addEventListener('change', function() {
+            var preview = document.getElementById('add-form-files-preview');
+            if (!preview) return;
+            preview.innerHTML = '';
+            if (!input.files || input.files.length === 0) return;
+
+            var badge = document.createElement('div');
+            badge.className = 'pill-count-summary';
+            badge.innerHTML = '✅ <strong>' + input.files.length + ' arquivo(s) selecionado(s) para anexar neste cliente:</strong>';
+            preview.appendChild(badge);
+
+            for (var i = 0; i < input.files.length; i++) {
+                var f = input.files[i];
+                var sizeStr = (f.size / 1024).toFixed(1) + ' KB';
+                if (f.size >= 1024 * 1024) {
+                    sizeStr = (f.size / (1024 * 1024)).toFixed(2) + ' MB';
+                }
+                var pill = document.createElement('span');
+                pill.className = 'file-selected-pill';
+                pill.textContent = '📎 ' + f.name + ' (' + sizeStr + ')';
+                preview.appendChild(pill);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
